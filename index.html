@@ -204,13 +204,18 @@
   .report-period { font-family: 'Fraunces', serif; font-size: 19px; text-transform: capitalize; }
   .report-meta { font-size: 12px; color: var(--ink-soft); margin-top: 3px; }
 
-  .report-summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 8px; }
-  .rep-block { border: 1px solid var(--line); border-left-width: 3px; border-radius: 16px; padding: 14px 15px; }
+  .report-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 8px; }
+  .rep-block { border: 1px solid var(--line); border-left-width: 3px; border-radius: 16px; padding: 14px 15px; min-width: 0; overflow-wrap: anywhere; }
   .rep-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin-bottom: 5px; }
-  .rep-main { font-family: 'Fraunces', serif; font-size: 19px; }
-  .rep-detail { font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; line-height: 1.55; }
+  .rep-main { font-family: 'Fraunces', serif; font-size: 19px; overflow-wrap: anywhere; }
+  .rep-detail { font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; line-height: 1.55; overflow-wrap: anywhere; }
+  @media (max-width: 460px) {
+    .report-summary { grid-template-columns: 1fr; }
+  }
 
   .report-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .report-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; }
+  .report-table-wrap .report-table { min-width: 460px; }
   .report-table th, .report-table td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); }
   .report-table th:first-child, .report-table td:first-child { text-align: left; }
   .report-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); font-weight: 600; }
@@ -403,7 +408,7 @@ function setBirthDate(dateStr) {
   if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) localStorage.setItem("babyritme:birthDate", dateStr);
   else localStorage.removeItem("babyritme:birthDate");
 }
-// Leeftijd in weken + maanden, netjes leesbaar in het Nederlands
+// Leeftijd altijd als maanden + weken + dagen (weken en dagen binnen de maand).
 function ageText(birth) {
   if (!birth) return "";
   const [by,bm,bd] = birth.split("-").map(Number);
@@ -412,16 +417,26 @@ function ageText(birth) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   if (b > today) return "nog niet geboren";
   const days = Math.floor((today - b) / 86400000);
-  const weeks = Math.floor(days / 7);
+  if (days === 0) return "pasgeboren";
+
   // volledige kalendermaanden
   let months = (today.getFullYear()-by)*12 + (today.getMonth()-(bm-1));
   if (today.getDate() < bd) months--;
   if (months < 0) months = 0;
+
+  // dagen sinds de laatste maand-verjaardag (met clamping voor korte maanden)
+  const targetM = (bm-1) + months;
+  const ty = by + Math.floor(targetM/12), tm = ((targetM%12)+12)%12;
+  const lastDay = new Date(ty, tm+1, 0).getDate();
+  const anniv = new Date(ty, tm, Math.min(bd, lastDay));
+  const sinceMonth = Math.floor((today - anniv) / 86400000);
+  const weeks = Math.floor(sinceMonth / 7);
+  const remDays = sinceMonth % 7;
+
+  const mLabel = `${months} maand`;
   const wLabel = weeks === 1 ? "1 week" : `${weeks} weken`;
-  const mLabel = months === 1 ? "1 maand" : `${months} maanden`;
-  if (days < 7) return days === 0 ? "pasgeboren" : days === 1 ? "1 dag oud" : `${days} dagen oud`;
-  if (months < 1) return `${wLabel} oud`;
-  return `${wLabel} · ${mLabel} oud`;
+  const dLabel = remDays === 1 ? "1 dag" : `${remDays} dagen`;
+  return `${mLabel}, ${wLabel} en ${dLabel} oud`;
 }
 function getLastBreastSide() {
   try { return JSON.parse(localStorage.getItem("babyritme:lastSide") || "null"); } catch (e) { return null; }
@@ -1188,7 +1203,7 @@ function renderReportView() {
       <div class="section-title">Per dag</div>
       ${dates.length > 62
         ? `<div class="empty-state">Kies een kortere periode (max. ~2 maanden) voor de dagtabel. De samenvatting en CSV-export werken wel voor langere periodes.</div>`
-        : `<table class="report-table">
+        : `<div class="report-table-wrap"><table class="report-table">
         <thead><tr><th>Datum</th><th>Voed.</th><th>Borst (min)</th><th>ml fles</th><th>Luiers</th><th>Pipi/kaka</th><th>Slaap</th><th>Temp</th></tr></thead>
         <tbody>
           ${agg.perDay.map(d => `<tr>
@@ -1207,7 +1222,7 @@ function renderReportView() {
             <td>${agg.temps.length?avg(agg.temps).toFixed(1)+"°":"–"}</td>
           </tr>
         </tbody>
-      </table>`}
+      </table></div>`}
     </div>
 
     <div class="report-actions">
@@ -1411,8 +1426,9 @@ function reminderModal() {
 
       ${permState === "denied" ? `<div class="sync-note" style="color:var(--health)">Meldingen staan geblokkeerd voor deze site. Zet ze aan via het slotje in de adresbalk (of de app-instellingen) om herinneringen te ontvangen.</div>`
         : permState === "unsupported" ? `<div class="sync-note">Deze browser ondersteunt geen meldingen. De aftelklok in de app werkt wel.</div>`
-        : `<div class="sync-note">Voeg de app toe aan je beginscherm (Chrome-menu ⋮ → "App installeren") voor de meest betrouwbare herinneringen.</div>`}
+        : `<div class="sync-note">Voor betrouwbare meldingen: open de app via je startscherm-icoon (Chrome-menu ⋮ → "App installeren"). Meldingen werken niet als je het HTML-bestand rechtstreeks opent — enkel via de online (https) versie.</div>`}
 
+      ${permState !== "unsupported" ? `<button class="reminder-btn" style="width:100%; justify-content:center; margin-bottom:10px" data-action="test-notification">Testmelding sturen</button>` : ""}
       <button class="submit-btn" style="background:var(--feed)" data-action="save-reminder">Opslaan</button>
     </div>
   </div>`;
@@ -1601,11 +1617,25 @@ function onAction(ev) {
     let intervalMin = h * 60 + m;
     if (intervalMin < 5) intervalMin = 5; // ondergrens
     setReminderCfg({ enabled, intervalMin });
-    if (enabled && typeof Notification !== "undefined" && Notification.permission === "default") {
-      Notification.requestPermission().then(() => { scheduleReminder(); render(); });
-    }
     lastNotifiedFor = null;
-    state.modal = null; render(); scheduleReminder();
+    if (enabled && typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission().then(() => { state.modal = null; render(); scheduleReminder(); });
+    } else {
+      state.modal = null; render(); scheduleReminder();
+    }
+  }
+  else if (action === "test-notification") {
+    const doTest = async () => {
+      const title = getAppName();
+      const opts = { body: "Zo ziet een voedingsherinnering eruit 🍼", tag: "baby-test", renotify: true };
+      try {
+        if (swReg && swReg.showNotification) await swReg.showNotification(title, opts);
+        else if (typeof Notification !== "undefined") new Notification(title, opts);
+      } catch (e) {}
+    };
+    if (typeof Notification === "undefined") return;
+    if (Notification.permission === "granted") doTest();
+    else if (Notification.permission === "default") Notification.requestPermission().then(p => { if (p === "granted") doTest(); render(); });
   }
   else if (action === "save-instellingen") {
     const newName = document.getElementById("app-name-input").value;
@@ -1738,9 +1768,21 @@ function onAction(ev) {
   }
 }
 
+// ---------------- service worker (nodig voor meldingen op Android) ----------------
+let swReg = null;
+async function initServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  try {
+    swReg = await navigator.serviceWorker.register("sw.js");
+    await navigator.serviceWorker.ready;
+    scheduleReminder();
+  } catch (e) { /* zonder service worker vallen we terug op desktop-meldingen */ }
+}
+
 // ---------------- herinnering-scheduler ----------------
 let reminderTimer = null;
 let lastNotifiedFor = null; // tijdstip (ms) waarvoor al een melding is getoond
+const REMINDER_TAG = "baby-voeding";
 
 function nextReminderTime() {
   const cfg = getReminderCfg();
@@ -1750,31 +1792,48 @@ function nextReminderTime() {
   return last.dt.getTime() + cfg.intervalMin * 60000;
 }
 
-function scheduleReminder() {
+async function scheduleReminder() {
   if (reminderTimer) { clearTimeout(reminderTimer); reminderTimer = null; }
   const cfg = getReminderCfg();
   if (!cfg.enabled) return;
   if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
   const target = nextReminderTime();
   if (!target) return;
-  const delay = target - Date.now();
-  if (delay <= 0) {
-    fireReminder(target);
-  } else {
-    // setTimeout kapt af rond ~24 dagen; onze intervallen zijn klein genoeg
-    reminderTimer = setTimeout(() => fireReminder(target), delay);
+
+  // Voorkeur: een geplande melding via de service worker (gaat ook af als de app
+  // dicht is), waar de browser TimestampTrigger ondersteunt.
+  if (swReg && "showTrigger" in Notification.prototype && typeof TimestampTrigger !== "undefined") {
+    try {
+      const pending = await swReg.getNotifications({ tag: REMINDER_TAG, includeTriggered: true });
+      pending.forEach(n => n.close());
+      await swReg.showNotification(getAppName(), {
+        body: reminderMessage(),
+        tag: REMINDER_TAG,
+        showTrigger: new TimestampTrigger(target),
+      });
+      return;
+    } catch (e) { /* val terug op setTimeout hieronder */ }
   }
+
+  // Fallback: setTimeout terwijl de app open of op de achtergrond leeft.
+  const delay = target - Date.now();
+  if (delay <= 0) fireReminder(target);
+  else reminderTimer = setTimeout(() => fireReminder(target), delay);
 }
 
-function fireReminder(target) {
+async function fireReminder(target) {
   if (lastNotifiedFor === target) return; // niet dubbel melden voor dezelfde voeding
   lastNotifiedFor = target;
+  const title = getAppName();
+  const opts = { body: reminderMessage(), tag: REMINDER_TAG, renotify: true };
   try {
-    new Notification(getAppName(), {
-      body: reminderMessage(),
-      tag: "osjes-voeding",
-      renotify: true,
-    });
+    if (swReg && swReg.showNotification) {
+      await swReg.showNotification(title, opts);           // werkt op Android
+    } else if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: "show-notification", title, ...opts });
+    } else if (typeof Notification !== "undefined") {
+      new Notification(title, opts);                        // desktop-fallback
+    }
   } catch (e) { /* melding niet mogelijk */ }
 }
 
@@ -1827,6 +1886,7 @@ state.appointments = loadAppointments();
 initSync();
 render();
 scheduleReminder();
+initServiceWorker();
 if (SYNC.enabled) {
   syncCurrentView();
   setInterval(() => { if (!state.modal) syncCurrentView(); }, 20000);
