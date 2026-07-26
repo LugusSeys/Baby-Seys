@@ -3,33 +3,27 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Baby Seys</title>
-<link rel="icon" type="image/png" sizes="512x512" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAIAAAB7GkOtAAAABmJLR0QA/wD/AP+gvaeTAAAgAElEQVR4nO3da5Mdx33f8e6embMX7GIXwOK2uAM0QJAESJGEJFMmaVIUi4pEygqrIsWyH7gsVSp+4LfgR6k8zoNUpcqspMp2KaXYKscWlUiypeguUSQlERABECQB4ra4LrD3PWdmujsPFqRICpc9Z2eme6a/n9Ijijz733PO9m/6Lr/0V18V3Ysj1UqSHv5DAP7oZJnWxnUVcEb18N9ESrWSuPBSAFSsL0miqJdGAM3Q9WcfRaqvlQghy6gGQMVaSRwpMiBQ3X3wUkqe/YEmkUL2JbFSPNKFqIsAkFL2txLJsz/QMFK2kkRI/rSDs+wAkKKvFUu+IkATKSn7W2RAcJYXAFL0JbGSDBQCjaWWBniJgJAsq01PojhSUdmlAHArViqJmOQLyJ0DII6iJKb1B4KQxFEckwGhuEMAqEi2Elp/ICCtOGJzQCBu9zFLKfsTlvwDwWFhaCBuGQBSCjZ8AaGSfUnCqr/Gu1UA2CRJFB8/ECopZZLEQljXhaBENw+AJI5jdocDYYuVSmLOfGyym7TyUaQSlgEAECJhQrjRPvzRctoPgPfri2NGg5vqAwEghehLYk77AfBbN04Kcl0GSvCBAEiSWDH0D+CDlGJgoJl+29zHcRRH7PkCcBOxiuKYp8OmufGJSilbnPcA4NaSOGF3WMMoIW4c9smeLwC3IYVoxRwX2ihKCJHEEUP/AO5IcVxosygV8YkCWC6eF5tE9bHnC0A3+loxGwOaQXHeE4CuSCE5IqIZ6MoB6FocKVaNNwABAKAXrSTiiIi6IwAA9Ea2WgnnRdcaAQCgR0rKmA2kdUYAAOhdErEiqMYIAAC9k5IVQTVGAABYkThSXBpTU3xsAFaqFTMQVEsEAICVklJyj2wdEQAAChDHccQZQXXDBwagCNa2kphxoHohAAAUQ7ItoG4IAACFSeKI8yVrhAAAUCDZYja4PggAAEWK4oirg+uCAABQKGtbScwhcbVAAAAomJIq4raAOiAAABSvlSQMA/mPAABQPClEzGyw9wgAAKVI4ojJYM8RAADKEid0ArxGAAAoS6xYEuo1AgBAiZKIToC/CAAAJYriSHE4hK8IAABlsparArxFAAAoF4dDeIsAAFAyOgG+IgAAlC5SSnFfmH/4SABUocVdMf4hAABUQSmlIhocv/B5AKhIwhGhniEAAFQkilgO5BcCAEBVrI3pBPiEAABQnShS3BrvDwIAQHWkkAnLgbxBAACoVMw8gDcIAADVkpIbgz1BAACoWpIQAF4gAABUTQo6AV4gAAA4kLAr2AN8BgAcUEoxGewcAQDADTaFOUcAAHCD9aDOEQAAHJGS80Hd4t0H4AyjQG4RAACciaKIo4EcIgAAuGNtHNMKOcNbD8ClOIoEfQBHCAAALkkhY+6Ld4T3HYBjHAvhCgEAwLFIcUuMGwQAAPcUo0Au8KYDcC9mR5gLvOkA3IuUYi1Q9QgAAF6IFVPBVSMAAHiBUaDq8Y4D8IJSiqVAFSMAAPiCDQEVIwAA+IItwRXj7QbgC0aBKkYAAPAIO8KqxHsNwCNcEVMlAgCARyLGgCpEAADwiZSMAlWGNxqAXyJFJ6AiBAAAv0T0AKrCGw3ALywGrQwBAMA7bAmuBgEAwDuKaYBKEAAAvBOpiOsBKkAAAPCOFEJJWqfSxa4LAMqVRHb9YDZ243/5mv68FdlWZPtjk0RGCJFp1c5VqmWq5fV2fHUhvrrQuroQX1lIMs1TqDNKCuO6hsYjANBASohNw+meNe09a9s7RzuRtLf5l6PY9Mc3mpqtq9P3/rmx8uJc8vb1/rev9b8z1actYVCpSKlcEwHlIgDQKOtX5R/ZNPfg5rlVyUrbDiXt+HA6Ppw+un1mMVO/uTL48sTQhdlWIXXijqSKhMhdV9FwBACaQEn7wKaFj22dHR9K7/xvd28gMYfG5w6Nz03MtV46N/zri4OGDkHJlBRKSWNu13vDChEAqDcpxT3rF57aNT02mFXw48aH0s/fPfnEzukfnl796sQQIxSlklIKQQCUiABAje0Y6Ty379qGVVU0/e832p8/t+/ax7fO/vMba09P91X808OhpNLMBJeJAEAtxco+uWv6E9tnHC4V3LAq+/MHL70yMfStt9akrBcqQaRk1dkeGAIA9TM+nP67e6+uG3A/QyiFODQ+t3tN+3+9PjbB/HDRlJJSCssgUGnYaoGauXfDwpc/csmH1v896wbyrzx46f6N864LaR7JdrBS8eaiNqQQj26f+cI9V5PIu2fCWNnn75l8es8Ux1gWS3IoUJkYAkJtPL1n6g+2z7iu4paW8imJ7DdPrHFdS3NESnrU12scegCoB89b//d8fMvsp++67rqK5pAMAZWJNxc18MTO6Ufr0PoveWTb7BM7p11X0RBKMqhWIgIAvjuwYeHJXTVrT5/cNf3AJuaEi8E0QHkIAHhtbDD73L5J11X04tm91zYOsYq9AFwOUx4CAP7qi82XDlzti71b87Mcrch+8d6rfTEbWVdK0kyVhncW/np6z1Q1J/yUZGww+9Tumg1eeSiiB1AaAgCe2ro6PbR5znUVK/XR8dkdIx3XVdSbYhq4NAQAfBQp+/m7Jxvwhy+l+KO7r93+RhrcgZQsBSoJAQAfHRqfq/6Mz5KMDWaHttS+K+MWnYCSEADwTqxsjVb9L8fjO2Y8PL6iRlgIVBICAN752JbZ1X3adRVFGmrpj47TCegdQ0AlIQDgl1jZR3fMuq6ieH+wfSZWdAJ6xJmgJeFthV/uXb+wKmnU4/+SoZa+Z/2i6ypqiw5AOQgA+OXh8caeoPBw/Ve1uqK4HLgcBAA8MjaY7Rhtu66iLDvXtGu9r80tjgUtA+8pPHJw43yD+/pSiIPcGtYr5oHLQADAI3eva+zj/5LG/4LlYSFoGQgA+GJ1S28aTl1XUa5Nw2nDVrhWhyGgEvCewhf7xhYb/5Anhdi3jrVAvaAHUAYCAL7YtSaIQ9N2jgbxaxaO0yDKQADAF1tWB9EyBvJrFo8AKAEBAC8MxGZNf+66iiqsHcgHuCWme6wCKgMBAC9sGU4D+fuWQmxp+lx3GaSU7AcuHAEALwS1Q2pdSL9sYayl/S8cAQAvjA4EtDhyNIzBrsIxClQ4AgBeGO0LqE0MKu2KRAAUjQCAF4J6KB7tJwB6QfNfOAIAXhhoBbQwZiAmAHpBB6BwBAC8kIR0bTrXQ/aKBCgYAQAvBNUmBpV2BWIzcOEIAHghiQIaAmqxEQx+IADgBTb54I5YBlo4AgBeyExAf9u5DuiXLRDvWuEIAHghC6lNzAx/d71g5qRwfBHhhdlO5LqE6sykAf2yBWIEqHAEALwwG1KbONsO6JeFzwgAeOHKQuK6hOoE9csWiA5A4QgAeGFituW6hOpMzBIAvSECCkYAwAtBtYkTs32uS6gppoELRgDAC5MLyWIWxLexnatri7HrKmqJfQCFC+JPDv6zQpyfC2IU6Nxsi+fY3vC+FY4AgC+OXx10XUIVjl8ZcF1CXfH8XzgCAL44dmWg8Y94VojjkwRAz4iAghEA8MVMJ7rQ9LVAEzOt6TYTAPAFAQCP/OZyw0eBXr/S8F+wZI3vIlaNAIBHfnVxlW7u37ix8rWLq1xXUWPN/Wo4QwDAI3Np9GZzh8jfmBzgFKCVYAagcAQA/PLKhSHXJZTllQke/1fEWvoABSMA4Jc3rw5MNXGadKodv9Xczk1V6AMUjACAX4wQvzjfwE7ASxND3AO5YvQACkYAwDsvTww17H6Y3MhXJxqYahWj+S8cAQDvtHN1+FKjlku+dnEwkJOOUC98KeGjly8Muy6hSL+YaNSv4wpzwIUjAOCj8zOtiaacDXdxLgnqtoPyNGpY0A8EADz1alOmgl8+z+N/MegAFI4AgKdevzLYgC6/teJ1jv8sCPsACkcAwFPzmTpX/5uzzs30zWfs/i0G7X/hCAD468TV2j87v8HmL3iMAIC/zszUfu60Ab+CPxgCKhwBAH9dna/9TfGT9f8V/EEAFI4AgL/m6795qgG/gj9o/gvXwFO34BspxPi6vnu3Du3c2D88EI8Mxq14+c3i3hIrK99/+pPl/pu5sQttfXEqfeviwuF3Zqfm8zLrqikioGAEAEokhTiwY/jpB9aNrWYk5A5iJVcPxqsH473jg898ZOzw6dn/88qVmUXtui6PWEMAFIwAQFnWDSVffGzztnW1X8pZPSXFAzuH948Pfuu1az8/PkWzJ4QQUloh6QQUiwBAKXZu6P/Tx8dX9bMEvnd9rehzh9ZvW9f/9Z9e0sHPf1praP0LRwCgeLs3Df75U+OR5OyWAjy4e3ggUX/3gwuhZ0DYv31JWKKAgq0dTv740U20/gXav23VZx4ec12FY6wBLQMBgCJJIf79o5uHGPkp2iN3jz6wM+hD5QwBUAICAEU6uHOYWd+SfO5jGwZa4f7BsgKoDOF+n1A4KcSn7l/nuorGGmipx+9b47oKd+gBlIAAQGHG1/Wx3r9Un9i3ppUE+jfLEFAZAv0yoQz3bmvIFS7eSmK5f0ujbktePgKgDAQACrNzQ7/rEprv3u2hpqw1ritoIAIAhRkZZPyndOtXh3i+tLGWK4HLQACgMMOs/izfmqEgU5bhn3IQAChMsPOTVeoP8k02jP+UI8QvE4B6YRtwSQgAAL7TbAMrBwEAwHf0AEpCAADwmhWWACgJAQDAa4bxn9IQAAC8xuN/eQgAAF6jB1AeAgCA19gEUB4CAIDXLD2A0hAAAPzFAqBSEQAA/MUWsFIRAChMO2OstnSdVLsuoVJ0AEpFAKAwU/O56xKab2YxrADQhqeKEhEAKMyV6dR1Cc0XWABYyxKgMhEAKMzrZ+dcl9B8Jy8tui6hOsZyFXy5CAAU5ui5+Szn77Vcx84FlLKG8Z+SEQAoTJqZn7wx5bqKJrs8nU5c67iuojoEQNkIABTp+0euzXf4oy3Lt3816bqESrEGtGwEAIrUzsyLL192XUUzvXN58WhIsyycAl0BAgAF+9Wp2Z8eZyCoYAsd/fc/uRRUc8gC0AoQACjeN1+5euzsvOsqmiM39m9/cGFyLnNdSKU4BLQCBACKp6392x9MvPTmtOtCmmCho//7dydOhbT6c4nW9ABKF7suAM1krPjfP798cSp95v61fa3IdTl19c7lxa/95OL1ueC2WFshrKAHUDoCAGWxQvzs+NTrp2c//dD6+3cMqy57m1IKoWKlEhXFSsVSRUJKKZRUUggppCyn6h5ZK4Qw1hphjLXGGG11ZnRmTNZbO3Z5Ov3Oryd/cyagWd/3M9rQ/ldAfuU/f911DWi+kcH44M7hPZsGNq/pW9Wn4ugWaSClUkmU9EVxn4pawq9GvjfW5LnO23nWtvp2g/hpZqYX8plFfery4tGzc0Gt9/9daZblDAGVjx4AqjC9kP/o6PUfHb1+0/9XSbl36+ih/RsP7h7rSxo2XiRVnKg4SfqHr8+2D5+a/NlvLkxMMkN+BzlLgCpBAMCltav7H71v/OF9G0aG+lzXUro1w/2PH9zy+MEtJ85N/eDw+ddPThrWud+MsYz/VIQAgBsbRwefenjbw/s2RN1ODtTf3q2je7eOTk4vfvuVMy8du8R2pw9h/U9lCABUbf3IwGd+f+dH7lovPZvIrdi6kYE//uS+x+/f8k8/Pnn87M0Hx8LEFrDKEACoThKrpx7c9tRD25M4uKf+W9kyNvQXf3Tw2Olrf/+DN69Ot12X454VlpGxykQPPfUF1zUgCPt3rP0Pzx24f89YpIJ+8L+p9aMDH79n80I7O3c50HWf7zHaMARUGXoAKF2k1Gc+vvOTD22j4b+NviT6whN7D+4Z++p3T0zPhbsGlBNAq0QPAOUaG+n/i88d+Mjvraf1X471IwMf27/xzKXZa7OBDgeleVhHHrlFAKBE9+1a+x8/d3Dd6gHXhdRJK44e3rdhbjE7G95wkDaG/V9VYi4OZTl098Y//zf3DrQYZuxapNQXntj7hSf2hrZGlvU/FeOPE6V46qFtzz6ym2GflfjEfZtXDyT/49vHgnkotjrXrmsIS1jPF6jGc4/sfo7WvwgH9oz92afviaMg3kvN8s/KEQAo2FMPbX/qoW2uq2iOA7vWfeUz94Wwc0IbHv+r1vxvFar08Xs2PfvILtdVNM3+HWv/7Jl7VdM3Tgcz0uURAgCFuW/X2i8+sbfhrZQj9+1a+28f2+O6ihJpwwFwDhAAKMbYSP+fPr1fscu3NI8d3PL4/VtcV1EWdv86QQCgAHEk/+yZe1jxWbbPP7rnvl1rXVdRPCssC0CdIABQgM/9wZ5tG4ZdV9F8Sso/+dT+tav7XRdSMGMsZ2I7QQBgpfbvWPvYwcYOTfhmsC/+00/d3bAJYaZ/XSEAsCJxJJ9/7K5GtUbe2zM+8vShHa6rKIy1lgkAVwgArMinHtq+YZSjfqr2zKHtOzY2ZMwt11qwAMgRAgC9G1vd/9RD211XESKl5Bf+cG8TBoKk5P53hwgA9O7ZT+wKYYeqn7ZuGPrEfZtdV7FSRmvLBQDu8NeLHq0fGbh/z3rXVQTts4/sWr2q5bqKFck0xz+4RACgR08f2t6EIYg6G2jFz3y0zrPB1hqmf50iANCLNcN9D+3d4LoKiI/v31TfbQG5YfTHMQIAvXjswJY44svjXhypJx+s69mrOeM/rvE3jK5JKR/ax+O/Lx65Z/PIUJ/rKrpmjKED4BwBgK7t2zo6WsMWp6niSD5+cNx1FV3LuPzLAwQAunZo/0bXJeADPrZ/U71uDzbWasv0r3t1+tLAB3GkDu4ec10FPmB4sHXPzjWuq+hCnuds/vUBAYDu7Ng43JdErqvAh31sf302hXH4jzcIAHRn77Y6PWmG496da+pyH0OmNU//niAA0J29W0ddl4CbiJTau60GH40VlsOf/UEAoAtJrHZsXO26CtzcPTtqcFmY1oa7X/xBAKALG9YMxBHHP3hq/461vn82UrL5yysEALqwcXSV6xJwS6NDfetGvD4WIteazV9eqcesETyxYc1gga926sL0W+enqhwRjiN115bRXZtHKvuJFdu8btXV6bbrKm5Js/nLMwQAurBxTTGXfy2m+V9/4/Dhk1cLebVuHdw99pVnD9ZlzUxXNq9ddeTkpOsqbk4bo7n7xTMMAaELa4eLOQHihRePuGr9hRCHT1594cUjrn56qcbHhlyXcEtZnrsuAR9GAKALfUU8NZ+amH7t7Ssrf52VeO3tK6cmpt3WUIZ1BSV04TSj/14iANCF/iL2AL81cX3lL7JynpRRrP5+L8e1pOTmLz8RAOhCfx+HQHht0MuJDRb/eIsAQBdacQEBcNe4F4dJeFJGsQb6Etcl3ETO4h9fEQDoQiG3gO0aH3F+m/z9e9bvGm/gYlAPt+lpYwyLf3xFAMCBL3/2gMMzpQ/uHvvyZw+4+umhSTMW//jLxxFDNN5AK/7L5x9c2gg2s5BW9nNXD7aavRHMN1prTv7xGQEAZ3ZtHqEtbraU0X+/MQQEoBRZnvP47zkCAEDxjLUs/vEfAQCgeHnOtV81QAAAKJixJtcs/qkBAgBAwdIsF8K7HQn4XQQAgCJx8EONEAAACmQz5n7rgwAAUJg0Z+dXnRAAAIphreXSx3ohAAAUo5PlPPzXCwEAoAC51pz6WTsEAICVstZy5W8dEQAAVirNcqZ+64gAALAi2mjN4E89EQAAemetTTNW/tQVAQCgdxkL/+uMAADQI2Mth77VGgEAoBfW2jTNOPSt1ggAAL1I89ww+FNzBACArmmjtWblT+0pa/kUAXTBWMHKn2ZQHQ5vAtCNLM9Y+dMMymiTs4cbwPJkOYM/zRELIdLcKGWUYj4AlTp1Yfqt81N5Qa1JHKm7tozu2jxSyKvhpoy1Ges+GyQWQghhO3k+0EpY0YVqLKb5X3/j8OGTVwt/5YO7x77y7MGBVlz4K8MKkWaZYOynQW489VvDfm5U54UXj5TR+gshDp+8+sKLR8p4ZaRZxmW/DfPbYZ9c61yTASjdqYnp196+Ut7rv/b2lVMT0+W9fphyzdB/A31g3D/L2NmB0r01cb0BPyIoxpgsY+i/gT4QAFaITpqRAADeY61Ic+56bKYPr/x593wPoCx3ja9pwI8IR4eh/+a6ydJPbUzKzgCUZtf4yP171pf3+vfvWb9rnMWgxUiznJt+G+zma//zPC9qdTbwu7782QMHd4+V8coHd499+bMHynjlAGljOO252W61XFpmeaZUS0l2BqB4A634L59/cGkj2MxCWshrrh5ssRGsQNbaDqc9N90t98tYK9Is62d3GEqza/MI7bW32swFBuB2xz8YYztpLtj5BwSmk3HcWxDucP6PNibluFAgJGmes+crEHc+AC7P2SEMhCLTec4zXzCWdQJomuc5S8GAptNGZ7T+IVneEdBWpFlmuDsMaC5jbSfTTPkFZdl3AFjRSTkpCGgmK2wnTQV/4IHp4hIYa20n46QgoHGs7aQZjX+AursFzBqbppmllwg0hRW2neWc9hOmrq+B1DcOhuXrAjRBxmk/AevlHuBcm5TDwYH6Szn1K2w9XgSfa5NmmeCkIKCmpEwzlvyHrscAEELk2mScFgLUU5pmbPBE7wEghMi05uYAoHayPKf1h1hhAIilgyLoRQL1keVs98UNKw0AcWMeie8TUAO51hm9dryrgAAQQqQZ44mA726s3QDeVUwACCHJAMBnuTZpzg1f+IBb3gjWPZlmubUiiaPiXhNAATKdZxnPZ/iwonoAN2R5zvwS4BVaf9xKwQEghMjyPM1y9ogB7kmZ5bT+uKXiA0AIkWvNXBPgXJpm9MhxGwXOAXxAnmthRSsp6/UB3F4ny7jaF7dXYgOda22FbSWxZOEBPkgbkRuZWam10FZqI6212gph5ftbLCWEkDaSQkoZKRNJEUciljZWNiql79oQVtg042J33Fm5T+ham47N+1oJCRA4I0Saq1SLVMtUy6W7R85dnjp7cSo3vYxRSCFiZZUUkRKxssv8gsWRumvL6K7NIz38xNqwNs1yzQnPWIbSh2iMMe007U8SybRweFIt27ns5DLVH/j0O2n+D9/99Ykzl51UdXD32FeePTjQaub4ZDvLuN0Fy1RFR9oau5imXDoRjlTL6UV1cS6+Mh/NdtSHWn8hxNe/95qr1l8Icfjk1RdePOLqp5eN1h/LV9VIqhWdNKNb2mzaiJnOjXZ/LlO3GoI+f2nqjdOXqi3tw157+8qpiWm3NQDOVTeVZoXopCkHUTVSO5eTC+riXDzbuWW7/54zl65XUtQdvDXhRRmAQxUPg8os11bYVpxU+3NRCmvFYibnUpUZJniA+nEwD5bnxti0P0k4l6q+rJULuVzO8/7v2r5xTQkVde2ucS/KABxys5raaNtOM2uZEqilhVRemo+mFntp/YUQWzaO7tuxseiiunPfrg27xhu9GBRYBmfbaYyx7TTTPa0BhyvtXF6ei6+3oxXuMXr+yfv3bt9QUFFd27t9w3N/+MDlubid0wdF0FwuhbZWdNIsjm0rbuaK7OaZXCjmrO++VvylTz+8tBFsfrFTyGsux6qBvm2bRrduGBVCZEZMLkT9sV3dr5NG7CvOtJjpcBg7uuC85ZV5rq0xfS2mBIKzdcONttihdi7bc/FgYlf36foeL5FbOduWC1ltfwE44jwAhBBCG9tOs1YcK8U3GA4sZHIxiwdbZqhl4lp9B3Mr5zpqIZXs/kIPvAgAIYQxtpNmSRLHEX1YOGCFmE/VQqoGEjPUMon3X8NMy9lULvLUjxXwJQCEEFaINMuNNa04ZjgITlghFjK1kKm+2A4lpi9Z7jFzlbFCdHI511Gd3zlgA+iWRwGwJM+N0WmSJBHDQXCnk8tOHkUdMZiYwcTGyv0QS27kfCYXUmm8SyXUlXcBIIQwVnTSPIlVwuogOKWNmO2o2Y5oRXYgMQOxg3sItBGLuVrIZMYjP4rmbQtrs1xrY/uSmHOk4VyqZaqjaSGSyPbHtj82SVTiMKW1IjOynct2TruPEnkbAEIIYYxZ7KStVhIzHAQ/ZFpmWs52lJIiiWwrsq1ItCKrVrwMRxuRmRt35mRacqgzKuB1ACxJ00xHiqsl4RVjl+YJbnwnlbSJEnFkIykiJSJllbRKCCWFePeLa4UQVhgrjBDGSG2lNkJbkWuZGVp8OFCDABBLV0uarJWwUQCeMlZ2tGBlDuqlNu2psbadpp0sE5YnJQAoQG0CQAghhNTaLKZZb9eIAwDer14BIIQQ1to0zTtpZukKAMAK1C8Almhj2mmW5XQFAKBHdQ0AIYS1NsvzdpoZugIA0L0aB8ASY0yns3TXPDEAAF2ofQAIIawQWa4XO1muGRECgOVqQgAssdam2dKIEFcNA8CdNScAlhhj2p20k2WWESEAuK2mBYAQ4sZ2gc7SGiFiAABurpEBIIQQwtoszxc7ObvGAOCm6nEWUM+sNWlqMqmTJIqV97f8AUCFmtsDeJ+lzcOLnVQbLbhdAACEEI3vAbyftbaT5krpJI6iKOZQOQCBCygAlhjzXgzEXDsMIGSBtoDG2E6atbNMG8OgEIAwBdcDeD+jTUcbKfM4ipKYKWIAYQk6AJYsHSqX53kcR3EccfEkgEAQADcsHSiU51pFqhXHknEhAE1HAHyAFUJrs2jSSEVJpLiCGECDEQA3Y4XWWmutlIwiFauY/gCA5iEAbscYa4zOpI6UiqOIZaMAmoQAWAYrtDZaG6VkpKI4klKSBABqjwDogjHWmDzLZRzJKIqUkiwZAlBfBEAPbK5tro2UUinJ0BCAmiIAemet1dpqkgBAPREABXgvCYQU704XS8HoEAC/EQCFene6WEqhlIqUipXirCEAfiIASmHfTYJUCiVVpJRSkm4BAK8QACWzwlhjjBFCLA0QLf2PoyYAOEcAVOjdboGQQkmppFRRpKRSZAEAFwgAF6ww1hphhTZCCCmlUkqpG4NFrosDEHWVxVgAAAb4SURBVAoCwD1rrdZaayGElkIopaSSSqlISkaKAJSHAPCLFUIbI4wQQgshhBRSSKXku6HA3mMAhSEA/GaFFUubDMRSJCxtOltKhXcJUgFADwiAmlnadCbEjR7CkqUcUFK8lwlKSsH4EYDbIgCawFprrTU3+X+kkEJJIaSUVix1FpaGkaQVSzvUboTEu9MN0gp7o0Mhb7z2u/8QQMMQAM1mhRXGCiGs60oAeIdFhwAQKAIAAAJFAABAoAgAAAgUAQAAgSIAACBQBAAABIoAAIBAEQAAECgCAAACRQAAQKAIAAAIFAEAAIEiAAAgUAQAAASKAACAQBEAABAoAgAAAkUAoAtcDOw97v5EFwgAdMHSvviNhEZXCAB0wxAAXrPWuC4BdUIAoAtZnrsuAbdjDAGALhAA6MLsYsd1CbiddidzXQLqhABAFyanF1yXgNuZnlt0XQLqhABAF85evO66BNzOxckZ1yWgTggAdOGtc5OuS8DtnLow5boE1AkBgC5cujbHSlBvSWnfOH3FdRWoEwIAXci1npphGsBTeZ61U5ZpoQsEALpzgmdMX12enHVdAmqGAEB33jhz2XUJuLnDb19wXQJqhgBAd965cC3Ptesq8GFSipePTbiuAjVDAKA7WpvjdAL8Mzc3l2VMAKA7BAC6duRNnjS988rx865LQP0QAOjam2euLLZT11Xgt6SwP/z1KddVoH4IAHRNG/PqG+dcV4HfujQ5leccA4euEQDoxctHzxjLjjAvSCG++ZNjrqtALREA6MXUzMKxkxddVwEhhJidn3uHEyDQEwIAPfrhL9+iC+CDF3981HUJqCsCAD26eG32KDuPXJtfmD/2zlXXVaCuCAD07l9/cUJzBZU7Uth/+N4R11WgxggA9O7azPzPj5x2XUW4Ji5fO3n+musqUGMEAFbk+6+emJ5ru64iSNb8zf991XURqDcCACuSZvobPzrCbHD1vv/qiYU2Zz9gRQgArNSbZ668evSM6yrCcn1q+v+9etJ1Fag9AgAF+NbPjl6+Nue6ilBYrf/bP77kugo0AQGAAmS5+dq//rLDdVTlk0L83bdf5eYvFIIAQDGuXp/7+vdeM4bpgHL9+Fcn3jrLwn8UgwBAYd44felbP+NQmhIdPXnuO794y3UVaA4CAEV66Tfv/PCXtFClOHvhytf+5bDrKtAoBAAK9t2XT/z0Nc6mL9iVyesv/PPLrqtA08SuC0ADffvnx7TRj37kLteFNMTZi1de+CdafxSPAEAp/vUXJ+YW02d+f7+U0nUt9Xb81MT//M6vXVeBZiIAUJafH3nn+szC808+0Nfia9YLKcSPf3WCWV+UhzkAlOiN05f/+h9/yh6xHlit/+abL9H6o1TRwT983nUNaLKFdvrrE2cH+lvj60cYDFqm61PT/+VrP7p8fd51IWg4+uYoXZabF3/0m+PvXHrusQMjQ/2uy/GbNd9/9QTn/KAa9ABQkWszC68cP6OU2rphhJnh3yWFvXD52n/9+o/fPMsR/6gIPQBUJ8v0v/z8+KvHznzy0L779mx2XY5H5hfm/+F7h0+ev+66EIRFfumvvuq6BoRo09rhRx+8697dm0LuDUghZufnvvGjo8dPc7wPHCAA4NKa4YGH791xaP+2vlbiupZKSWEuTU6/+ONjpy9Oua4F4SIA4J6K1O9tHTt0z/Y9W8ZU1OSlyVKKubn5V46f+8GvTmltXJeD0DEHAPeMNm+cvvzG6cuRUts3r3lg7/hdW9cNDQ4I0YTRISltnmeXJ2ePvH3xF0fPZbl2XRFwAwEAj2hjTp2fPHV+UggRRWp8bPXeHWPb1o+uGx0c7G9FKlJKWSF8DQYrhTDWWGPanWx6bvHStdlTE9ePnb7cSWn04SMCAJ7S2py9NHX2EkPkQFmaPN4KALgNAgAAAkUAAECgCAAACBQBAACBIgAAIFAEAAAEigAAgEARAAAQKAIAAAJFAABAoAgAAAgUAQAAgSIAACBQBAAABIoAAIBAEQAAECgCAAACRQAAQKAIAAAIFAEAAIEiAAAgUAQAAASKAACAQBEAABAoAgAAAkUAAECgCAAACBQBAACBIgAAIFAEAAAEigAAgEARAAAQKAIAAAJFAABAoAgAAAgUAQAAgSIAACBQBAAABIoAAIBAEQAAECgCAAACRQAAQKAIAAAIFAEAAIEiAAAgUAQAAASKAACAQBEAABAoAgAAAkUAAECgCAAACBQBAACBIgAAIFAEAAAEigAAgEARAAAQKAIAAAJFAABAoAgAAAgUAQAAgSIAACBQBAAABIoAAIBAEQAAECgCAAACRQAAQKAIAAAIFAEAAIEiAAAgUAQAAASKAACAQBEAABAoAgAAAkUAAECgCAAACBQBAACB+v/HNV708FxxagAAAABJRU5ErkJggg==">
-<link rel="apple-touch-icon" href="data:image/png;base64,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">
-<meta name="theme-color" content="#5B7FA6">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Baby Seys">
+<title>Osjes Dagboek — voeding &amp; luiers bijhouden</title>
+<link rel="icon" href="data:,">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
   :root {
-    --bg: #EDE9DF;
+    --bg: #F1EEE2;
     --surface: #FFFFFF;
-    --surface-soft: #F7F4EC;
-    --ink: #2B2A33;
-    --ink-soft: #706B72;
-    --line: #DCD5C4;
-    --feed: #5B7FA6;
-    --feed-soft: #DCE6F0;
-    --diaper: #C98A3E;
-    --diaper-dark: #8C5A24;
-    --diaper-soft: #F3E3CB;
-    --health: #A6586B;
-    --health-soft: #F1DBE0;
-    --sleep: #6B6096;
-    --sleep-soft: #E4DEF0;
+    --surface-soft: #F5F2E7;
+    --ink: #3C4A38;
+    --ink-soft: #8B8D79;
+    --line: #E1DCC7;
+    --feed: #7C9473;
+    --feed-soft: #E4EBDD;
+    --diaper: #C9A66B;
+    --diaper-dark: #A07E45;
+    --diaper-soft: #F2E7CE;
+    --health: #BA8E74;
+    --health-soft: #F3E6D9;
+    --sleep: #52746D;
+    --sleep-soft: #DAE5E1;
   }
   * { box-sizing: border-box; }
   html, body {
@@ -43,7 +37,7 @@
   .display { font-family: 'Fraunces', serif; }
   svg { display: block; }
 
-  .shell { max-width: 760px; margin: 0 auto; padding: 28px 20px 70px; }
+  .shell { max-width: 760px; margin: 0 auto; padding: 32px 22px 76px; }
 
   .top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; }
   .brand { font-family: 'Fraunces', serif; font-weight: 600; font-size: 28px; letter-spacing: -0.01em; }
@@ -77,8 +71,8 @@
   .today-btn { font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: var(--feed);
     background: var(--feed-soft); border: none; padding: 5px 10px; border-radius: 8px; cursor: pointer; }
 
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
-    padding: 20px; margin-bottom: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 24px;
+    padding: 22px; margin-bottom: 18px; }
 
   .ribbon-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--ink-soft); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
@@ -95,9 +89,9 @@
     font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-soft); }
   .ribbon-empty { font-size: 13px; color: var(--ink-soft); font-style: italic; }
 
-  .quick-add { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 18px; }
-  .quick-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 14px;
-    padding: 14px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  .quick-add { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 20px; }
+  .quick-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 18px;
+    padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px;
     cursor: pointer; font-family: 'Figtree', sans-serif; font-weight: 600; font-size: 13px; color: var(--ink); }
   .quick-btn:hover { background: var(--surface-soft); }
   .quick-btn.feed { color: var(--feed); }
@@ -105,9 +99,9 @@
   .quick-btn.health { color: var(--health); }
   .quick-btn.sleep { color: var(--sleep); }
 
-  .stats-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
-  .stat-chip { background: var(--surface-soft); border: 1px solid var(--line); border-radius: 12px;
-    padding: 8px 14px; font-size: 13px; display: flex; align-items: baseline; gap: 6px; }
+  .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-chip { background: var(--surface-soft); border: 1px solid var(--line); border-radius: 16px;
+    padding: 9px 16px; font-size: 13px; display: flex; align-items: baseline; gap: 6px; }
   .stat-chip .num { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; }
   .stat-chip .lbl { color: var(--ink-soft); }
 
@@ -132,7 +126,7 @@
 
   .modal-overlay { position: fixed; inset: 0; background: rgba(43,42,51,0.35);
     display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
-  .modal { background: var(--surface); border-radius: 20px; padding: 24px; width: 100%; max-width: 380px; }
+  .modal { background: var(--surface); border-radius: 26px; padding: 26px; width: 100%; max-width: 380px; }
   .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
   .modal-title { font-family: 'Fraunces', serif; font-size: 19px; }
   .modal-close { border: none; background: var(--surface-soft); width: 30px; height: 30px;
@@ -141,19 +135,19 @@
   .field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft);
     margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
   .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line);
-    border-radius: 10px; padding: 10px 12px; font-size: 14px; font-family: 'Figtree', sans-serif;
+    border-radius: 14px; padding: 10px 14px; font-size: 14px; font-family: 'Figtree', sans-serif;
     background: var(--surface-soft); color: var(--ink); }
   .field textarea { resize: vertical; min-height: 54px; font-family: 'Figtree', sans-serif; }
   .seg { display: flex; gap: 8px; }
   .seg button { flex: 1; border: 1px solid var(--line); background: var(--surface-soft); padding: 10px 6px;
-    border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink); }
+    border-radius: 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink); }
   .seg button.on { color: var(--surface); border-color: transparent; }
-  .submit-btn { width: 100%; border: none; padding: 12px; border-radius: 12px; font-weight: 700;
+  .submit-btn { width: 100%; border: none; padding: 13px; border-radius: 16px; font-weight: 700;
     font-size: 14px; cursor: pointer; color: var(--surface); margin-top: 4px; font-family: 'Figtree', sans-serif; }
 
-  .week-summary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 16px; }
-  .summary-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-    padding: 14px; text-align: center; }
+  .week-summary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 18px; }
+  .summary-card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+    padding: 15px; text-align: center; }
   .summary-card .num { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; }
   .summary-card .lbl { font-size: 11px; color: var(--ink-soft); text-transform: uppercase;
     letter-spacing: 0.05em; margin-top: 2px; }
@@ -181,7 +175,7 @@
   .report-meta { font-size: 12px; color: var(--ink-soft); margin-top: 3px; }
 
   .report-summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 8px; }
-  .rep-block { border: 1px solid var(--line); border-left-width: 3px; border-radius: 12px; padding: 13px 14px; }
+  .rep-block { border: 1px solid var(--line); border-left-width: 3px; border-radius: 16px; padding: 14px 15px; }
   .rep-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin-bottom: 5px; }
   .rep-main { font-family: 'Fraunces', serif; font-size: 19px; }
   .rep-detail { font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; line-height: 1.55; }
@@ -195,7 +189,7 @@
   .report-table tr.total-row td { font-weight: 700; border-top: 2px solid var(--line); border-bottom: none; }
 
   .report-actions { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
-  .report-actions button { border: 1px solid var(--line); background: var(--surface); border-radius: 12px;
+  .report-actions button { border: 1px solid var(--line); background: var(--surface); border-radius: 16px;
     padding: 11px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Figtree', sans-serif;
     color: var(--ink); display: inline-flex; align-items: center; gap: 7px; }
   .report-actions button:hover { background: var(--surface-soft); }
@@ -302,20 +296,21 @@ function longDate(dateStr) {
 function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
 
 function aggregate(dates) {
-  const totals = { feedings:0, ml:0, borst:0, fles:0, plas:0, poep:0, luiers:0, slaapMin:0, temps:[] };
+  const totals = { feedings:0, ml:0, borst:0, fles:0, borstMin:0, plas:0, poep:0, luiers:0, slaapMin:0, temps:[] };
   const perDay = dates.map(date => {
     const day = getDay(date);
-    const ml = day.feedings.reduce((s,f)=>s+(Number(f.amount)||0),0);
+    const ml = day.feedings.filter(f=>f.type==="fles").reduce((s,f)=>s+(Number(f.amount)||0),0);
     const borst = day.feedings.filter(f=>f.type==="borst").length;
     const fles = day.feedings.filter(f=>f.type==="fles").length;
+    const borstMin = day.feedings.filter(f=>f.type==="borst").reduce((s,f)=>s+(Number(f.left)||0)+(Number(f.right)||0),0);
     const plas = day.diapers.filter(x=>x.type==="plas"||x.type==="beide").length;
     const poep = day.diapers.filter(x=>x.type==="poep"||x.type==="beide").length;
     const slaapMin = day.sleeps.reduce((s,x)=>s+sleepMinutes(x),0);
     const temps = day.health.filter(h=>h.type==="temperatuur"&&h.value!=="").map(h=>Number(h.value)).filter(v=>!isNaN(v));
-    totals.feedings += day.feedings.length; totals.ml += ml; totals.borst += borst; totals.fles += fles;
+    totals.feedings += day.feedings.length; totals.ml += ml; totals.borst += borst; totals.fles += fles; totals.borstMin += borstMin;
     totals.plas += plas; totals.poep += poep; totals.luiers += day.diapers.length; totals.slaapMin += slaapMin;
     totals.temps = totals.temps.concat(temps);
-    return { date, feedings: day.feedings.length, ml, borst, fles, plas, poep, luiers: day.diapers.length, slaapMin, temps };
+    return { date, feedings: day.feedings.length, ml, borst, fles, borstMin, plas, poep, luiers: day.diapers.length, slaapMin, temps };
   });
   return { perDay, ...totals };
 }
@@ -323,19 +318,19 @@ function aggregate(dates) {
 function exportReportCsv() {
   const { from, to } = state.report;
   const agg = aggregate(datesBetween(from, to));
-  const head = ["Datum","Voedingen","ml","Borstvoedingen","Flesvoedingen","Luiers","Pipi","Kaka","Slaap (min)","Temp gemiddeld","Temp metingen"];
+  const head = ["Datum","Voedingen","ml (fles)","Borstvoedingen","Borst minuten","Flesvoedingen","Luiers","Pipi","Kaka","Slaap (min)","Temp gemiddeld","Temp metingen"];
   const rows = [head];
   agg.perDay.forEach(d => {
     const t = d.temps.length ? avg(d.temps).toFixed(1) : "";
-    rows.push([d.date, d.feedings, d.ml, d.borst, d.fles, d.luiers, d.plas, d.poep, d.slaapMin, t, d.temps.length]);
+    rows.push([d.date, d.feedings, d.ml, d.borst, d.borstMin, d.fles, d.luiers, d.plas, d.poep, d.slaapMin, t, d.temps.length]);
   });
   const tAll = agg.temps.length ? avg(agg.temps).toFixed(1) : "";
-  rows.push(["TOTAAL", agg.feedings, agg.ml, agg.borst, agg.fles, agg.luiers, agg.plas, agg.poep, agg.slaapMin, tAll, agg.temps.length]);
+  rows.push(["TOTAAL", agg.feedings, agg.ml, agg.borst, agg.borstMin, agg.fles, agg.luiers, agg.plas, agg.poep, agg.slaapMin, tAll, agg.temps.length]);
   const csv = "\uFEFF" + rows.map(r => r.join(";")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url; a.download = `babyritme_${from}_tot_${to}.csv`;
+  a.href = url; a.download = `osjes-dagboek_${from}_tot_${to}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 200);
 }
@@ -359,6 +354,13 @@ function loadDay(dateStr) {
 }
 function saveDay(dateStr, data) {
   localStorage.setItem(STORAGE_PREFIX + dateStr, JSON.stringify(data));
+}
+function getLastBreastSide() {
+  try { return JSON.parse(localStorage.getItem("babyritme:lastSide") || "null"); } catch (e) { return null; }
+}
+function setLastBreastSide(side, time, date) {
+  if (!side) return;
+  localStorage.setItem("babyritme:lastSide", JSON.stringify({ side, time, date }));
 }
 
 // ---------------- sync (Supabase) ----------------
@@ -507,7 +509,15 @@ function kindColor(kind) { return kind === "feedings" ? "var(--feed)" : kind ===
 function kindSoft(kind) { return kind === "feedings" ? "var(--feed-soft)" : kind === "diapers" ? "var(--diaper-soft)" : kind === "sleeps" ? "var(--sleep-soft)" : "var(--health-soft)"; }
 function kindIcon(kind) { return kind === "feedings" ? ICON.droplet : kind === "diapers" ? ICON.circle : kind === "sleeps" ? ICON.moon : ICON.thermo; }
 function labelFor(e) {
-  if (e.kind === "feedings") return `${FEED_LABEL[e.type]} · ${e.amount} ml`;
+  if (e.kind === "feedings") {
+    if (e.type === "borst") {
+      const links = Number(e.left) || 0, rechts = Number(e.right) || 0;
+      const duur = `L ${links}m · R ${rechts}m`;
+      const kant = e.side === "links" ? "laatst links" : e.side === "rechts" ? "laatst rechts" : "";
+      return `${FEED_LABEL[e.type]} · ${duur}${kant ? " · " + kant : ""}`;
+    }
+    return `${FEED_LABEL[e.type]} · ${e.amount} ml`;
+  }
   if (e.kind === "diapers") return DIAPER_LABEL[e.type];
   if (e.kind === "sleeps") return `Slaap · ${fmtDuration(sleepMinutes(e))}`;
   if (e.type === "temperatuur") return `Temperatuur · ${e.value}°C`;
@@ -547,7 +557,7 @@ function render() {
     <div class="shell">
       <div class="top">
         <div>
-          <div class="brand">Babyritme<span class="dot">.</span></div>
+          <div class="brand">Osjes Dagboek<span class="dot">.</span></div>
           <div class="tagline">voeding, luiers en metingen, dag na dag</div>
         </div>
         <button class="sync-btn" data-action="open-modal" data-modal="sync" title="${SYNC.lastStatus}">
@@ -578,10 +588,12 @@ function renderDagView() {
     ...day.health.map(e => ({...e, kind:"health"})),
   ].sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
 
-  const totalMl = day.feedings.reduce((s,f)=>s+(Number(f.amount)||0),0);
+  const totalMl = day.feedings.filter(f=>f.type==="fles").reduce((s,f)=>s+(Number(f.amount)||0),0);
+  const totalBorstMin = day.feedings.filter(f=>f.type==="borst").reduce((s,f)=>s+(Number(f.left)||0)+(Number(f.right)||0),0);
   const totalSleep = day.sleeps.reduce((s,x)=>s+sleepMinutes(x),0);
   const isToday = state.selectedDate === todayStr();
   const nowMinutes = timeToMinutes(nowTimeStr());
+  const lastSide = getLastBreastSide();
 
   return `
     <div class="date-nav">
@@ -612,9 +624,10 @@ function renderDagView() {
     </div>
 
     <div class="stats-row">
-      <div class="stat-chip"><span class="num mono">${day.feedings.length}</span><span class="lbl">voedingen</span></div>
-      <div class="stat-chip"><span class="num mono">${totalMl}</span><span class="lbl">ml totaal</span></div>
-      <div class="stat-chip"><span class="num mono">${day.diapers.length}</span><span class="lbl">luiers</span></div>
+      <div class="stat-chip"><span class="num mono">${day.feedings.length}</span><span class="lbl">voeding${day.feedings.length === 1 ? "" : "en"}</span></div>
+      <div class="stat-chip"><span class="num mono">${totalBorstMin}m</span><span class="lbl">borst${lastSide ? " · laatst " + (lastSide.side === "links" ? "L" : "R") : ""}</span></div>
+      <div class="stat-chip"><span class="num mono">${totalMl}</span><span class="lbl">ml fles</span></div>
+      <div class="stat-chip"><span class="num mono">${day.diapers.length}</span><span class="lbl">luier${day.diapers.length === 1 ? "" : "s"}</span></div>
       <div class="stat-chip"><span class="num mono">${totalSleep ? fmtDuration(totalSleep) : "0m"}</span><span class="lbl">slaap</span></div>
     </div>
 
@@ -650,14 +663,15 @@ function renderWeekView() {
   const monday = dates[0], sunday = dates[6];
   const chartData = dates.map((d,i) => {
     const day = getDay(d);
-    const totalMl = day.feedings.reduce((s,f)=>s+(Number(f.amount)||0),0);
+    const totalMl = day.feedings.filter(f=>f.type==="fles").reduce((s,f)=>s+(Number(f.amount)||0),0);
+    const borstMin = day.feedings.filter(f=>f.type==="borst").reduce((s,f)=>s+(Number(f.left)||0)+(Number(f.right)||0),0);
     const plas = day.diapers.filter(x=>x.type==="plas"||x.type==="beide").length;
     const poep = day.diapers.filter(x=>x.type==="poep"||x.type==="beide").length;
     const temps = day.health.filter(h=>h.type==="temperatuur" && h.value !== "");
     const avgTemp = temps.length ? temps.reduce((s,t)=>s+Number(t.value),0)/temps.length : null;
     const slaapMin = day.sleeps.reduce((s,x)=>s+sleepMinutes(x),0);
     return {
-      date: d, label: DAG_LABELS[i], ml: totalMl,
+      date: d, label: DAG_LABELS[i], ml: totalMl, borstMin,
       voedingen: day.feedings.length, plas, poep, luiers: day.diapers.length,
       slaapMin, slaapU: Math.round(slaapMin/60*10)/10,
       temp: avgTemp !== null ? Math.round(avgTemp*10)/10 : null,
@@ -667,9 +681,12 @@ function renderWeekView() {
   const hasTemp = chartData.some(d => d.temp !== null);
   const totalFeedings = chartData.reduce((s,d)=>s+d.voedingen,0);
   const totalMlWeek = chartData.reduce((s,d)=>s+d.ml,0);
+  const totalBorstMinWeek = chartData.reduce((s,d)=>s+d.borstMin,0);
   const totalDiapers = chartData.reduce((s,d)=>s+d.luiers,0);
   const totalSleepWeek = chartData.reduce((s,d)=>s+d.slaapMin,0);
   const daysWithData = chartData.filter(d=>d.voedingen>0||d.luiers>0||d.slaapMin>0).length || 1;
+  const hasBorst = chartData.some(d => d.borstMin > 0);
+  const hasFles = chartData.some(d => d.ml > 0);
 
   return `
     <div class="week-nav">
@@ -680,16 +697,25 @@ function renderWeekView() {
 
     <div class="week-summary">
       <div class="summary-card"><div class="num mono">${Math.round(totalFeedings/daysWithData)}</div><div class="lbl">voedingen / dag</div></div>
-      <div class="summary-card"><div class="num mono">${Math.round(totalMlWeek/daysWithData)}</div><div class="lbl">ml / dag</div></div>
+      <div class="summary-card"><div class="num mono">${fmtDuration(Math.round(totalBorstMinWeek/daysWithData))}</div><div class="lbl">borst / dag</div></div>
+      <div class="summary-card"><div class="num mono">${Math.round(totalMlWeek/daysWithData)}</div><div class="lbl">ml fles / dag</div></div>
       <div class="summary-card"><div class="num mono">${Math.round(totalDiapers/daysWithData)}</div><div class="lbl">luiers / dag</div></div>
       <div class="summary-card"><div class="num mono">${totalSleepWeek ? fmtDuration(Math.round(totalSleepWeek/daysWithData)) : "0m"}</div><div class="lbl">slaap / dag</div></div>
     </div>
 
+    ${hasBorst ? `
     <div class="card">
-      <div class="section-title">Voeding per dag (ml)</div>
-      <div class="chart-sub">Totale hoeveelheid melk per dag deze week</div>
+      <div class="section-title">Borstvoeding per dag (minuten)</div>
+      <div class="chart-sub">Totale tijd aan de borst per dag deze week</div>
+      ${barChart(chartData, [{key:"borstMin", color:"var(--feed)"}], v => v + " min")}
+    </div>` : ""}
+
+    ${hasFles ? `
+    <div class="card">
+      <div class="section-title">Flesvoeding per dag (ml)</div>
+      <div class="chart-sub">Totale hoeveelheid melk per fles per dag deze week</div>
       ${barChart(chartData, [{key:"ml", color:"var(--feed)"}], v => v + " ml")}
-    </div>
+    </div>` : ""}
 
     <div class="card">
       <div class="section-title">Slaap per dag (uren)</div>
@@ -748,8 +774,8 @@ function renderReportView() {
       <div class="report-summary">
         <div class="rep-block" style="border-left-color:var(--feed)">
           <div class="rep-lbl">Voeding</div>
-          <div class="rep-main">${agg.feedings} voedingen · ${agg.ml} ml</div>
-          <div class="rep-detail">gem. ${(agg.feedings/denom).toFixed(1)}/dag · ${Math.round(agg.ml/denom)} ml/dag<br>borst ${agg.borst} · fles ${agg.fles}</div>
+          <div class="rep-main">${agg.feedings} voedingen · ${fmtDuration(agg.borstMin)} borst · ${agg.ml} ml fles</div>
+          <div class="rep-detail">gem. ${(agg.feedings/denom).toFixed(1)}/dag · ${fmtDuration(Math.round(agg.borstMin/denom))} borst/dag · ${Math.round(agg.ml/denom)} ml fles/dag<br>borst ${agg.borst}× · fles ${agg.fles}×</div>
         </div>
         <div class="rep-block" style="border-left-color:var(--sleep)">
           <div class="rep-lbl">Slaap</div>
@@ -776,11 +802,12 @@ function renderReportView() {
       ${dates.length > 62
         ? `<div class="empty-state">Kies een kortere periode (max. ~2 maanden) voor de dagtabel. De samenvatting en CSV-export werken wel voor langere periodes.</div>`
         : `<table class="report-table">
-        <thead><tr><th>Datum</th><th>Voed.</th><th>ml</th><th>Luiers</th><th>Pipi/kaka</th><th>Slaap</th><th>Temp</th></tr></thead>
+        <thead><tr><th>Datum</th><th>Voed.</th><th>Borst (min)</th><th>ml fles</th><th>Luiers</th><th>Pipi/kaka</th><th>Slaap</th><th>Temp</th></tr></thead>
         <tbody>
           ${agg.perDay.map(d => `<tr>
             <td>${shortDate(d.date)}</td>
             <td>${d.feedings||"–"}</td>
+            <td>${d.borstMin||"–"}</td>
             <td>${d.ml||"–"}</td>
             <td>${d.luiers||"–"}</td>
             <td>${d.plas}/${d.poep}</td>
@@ -788,7 +815,7 @@ function renderReportView() {
             <td>${d.temps.length ? avg(d.temps).toFixed(1)+"°" : "–"}</td>
           </tr>`).join("")}
           <tr class="total-row">
-            <td>Totaal</td><td>${agg.feedings}</td><td>${agg.ml}</td><td>${agg.luiers}</td>
+            <td>Totaal</td><td>${agg.feedings}</td><td>${agg.borstMin}</td><td>${agg.ml}</td><td>${agg.luiers}</td>
             <td>${agg.plas}/${agg.poep}</td><td>${agg.slaapMin?fmtDuration(agg.slaapMin):"–"}</td>
             <td>${agg.temps.length?avg(agg.temps).toFixed(1)+"°":"–"}</td>
           </tr>
@@ -880,6 +907,9 @@ function renderModal() {
 }
 
 function feedingModal() {
+  const last = getLastBreastSide();
+  const lastHint = last ? `Laatste kant was <strong>${last.side === "links" ? "links" : "rechts"}</strong>${last.date ? ` (${formatDateNice(last.date)}${last.time ? ", " + last.time : ""})` : ""}.` : "";
+  const defaultSide = last ? last.side : "links";
   return `
   <div class="modal-overlay" data-action="close-modal">
     <div class="modal" onclick="event.stopPropagation()">
@@ -893,7 +923,21 @@ function feedingModal() {
         </div>
         <input type="hidden" id="f-type" value="borst">
       </div>
-      <div class="field"><label>Hoeveelheid (ml)</label><input type="number" min="0" id="f-amount" placeholder="bv. 120"></div>
+      <div id="f-borst-fields">
+        ${lastHint ? `<div class="chart-sub" style="margin-top:-4px">${lastHint}</div>` : ""}
+        <div class="field"><label>Links (minuten)</label><input type="number" min="0" id="f-left" placeholder="bv. 10"></div>
+        <div class="field"><label>Rechts (minuten)</label><input type="number" min="0" id="f-right" placeholder="bv. 5"></div>
+        <div class="field"><label>Laatste kant</label>
+          <div class="seg">
+            <button type="button" class="${defaultSide==='links'?'on':''}" style="${defaultSide==='links'?'background:var(--feed)':''}" data-action="seg" data-group="f-side" data-value="links">Links</button>
+            <button type="button" class="${defaultSide==='rechts'?'on':''}" style="${defaultSide==='rechts'?'background:var(--feed)':''}" data-action="seg" data-group="f-side" data-value="rechts">Rechts</button>
+          </div>
+          <input type="hidden" id="f-side" value="${defaultSide}">
+        </div>
+      </div>
+      <div id="f-fles-fields" style="display:none">
+        <div class="field"><label>Hoeveelheid (ml)</label><input type="number" min="0" id="f-amount" placeholder="bv. 120"></div>
+      </div>
       <div class="field"><label>Notitie (optioneel)</label><textarea id="f-note" placeholder="bv. dronk traag"></textarea></div>
       <button class="submit-btn" style="background:var(--feed)" data-action="save-feeding">Voeding opslaan</button>
     </div>
@@ -1045,7 +1089,15 @@ function onAction(ev) {
       group === "f-type" ? "--feed" : group === "d-type" ? "--diaper" : "--health"
     ) || el.style.background;
     // keep original inline color var reference instead (simpler + correct):
-    el.style.background = group === "f-type" ? "var(--feed)" : group === "d-type" ? "var(--diaper)" : "var(--health)";
+    el.style.background = (group === "f-type" || group === "f-side") ? "var(--feed)" : group === "d-type" ? "var(--diaper)" : "var(--health)";
+    if (group === "f-type") {
+      const borstFields = document.getElementById("f-borst-fields");
+      const flesFields = document.getElementById("f-fles-fields");
+      if (borstFields && flesFields) {
+        borstFields.style.display = value === "borst" ? "" : "none";
+        flesFields.style.display = value === "fles" ? "" : "none";
+      }
+    }
     if (group === "h-type") {
       const label = document.getElementById("h-value-label");
       const valueInput = document.getElementById("h-value");
@@ -1059,13 +1111,26 @@ function onAction(ev) {
     }
   }
   else if (action === "save-feeding") {
-    const entry = {
-      id: uid(),
-      time: document.getElementById("f-time").value || nowTimeStr(),
-      type: document.getElementById("f-type").value,
-      amount: Number(document.getElementById("f-amount").value) || 0,
-      note: document.getElementById("f-note").value.trim(),
-    };
+    const type = document.getElementById("f-type").value;
+    const time = document.getElementById("f-time").value || nowTimeStr();
+    let entry;
+    if (type === "borst") {
+      const side = document.getElementById("f-side").value;
+      entry = {
+        id: uid(), time, type,
+        left: Number(document.getElementById("f-left").value) || 0,
+        right: Number(document.getElementById("f-right").value) || 0,
+        side,
+        note: document.getElementById("f-note").value.trim(),
+      };
+      setLastBreastSide(side, time, state.selectedDate);
+    } else {
+      entry = {
+        id: uid(), time, type,
+        amount: Number(document.getElementById("f-amount").value) || 0,
+        note: document.getElementById("f-note").value.trim(),
+      };
+    }
     const day = getDay(state.selectedDate);
     day.feedings.push(entry);
     persistDay(state.selectedDate, { kind: "feedings", entry });
