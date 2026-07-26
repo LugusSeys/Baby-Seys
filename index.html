@@ -97,6 +97,33 @@
     font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-soft); }
   .ribbon-empty { font-size: 13px; color: var(--ink-soft); font-style: italic; }
 
+  /* 24u-urenrooster */
+  .hgrid { display: flex; flex-direction: column; }
+  .hgrid-row { display: flex; align-items: stretch; gap: 12px; min-height: 40px;
+    padding: 5px 0; border-top: 1px solid var(--line); }
+  .hgrid-row:first-child { border-top: none; }
+  .hgrid-hour { flex-shrink: 0; width: 40px; padding-top: 9px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; color: var(--ink-soft); text-align: right; }
+  .hgrid-row.now .hgrid-hour { color: var(--ink); font-weight: 700; }
+  .hgrid-cells { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    align-content: center; border-radius: 12px; padding: 4px 6px; min-width: 0; }
+  .hgrid-row.sleeping .hgrid-cells { background: var(--sleep-soft); }
+  .hgrid-row.now .hgrid-cells { outline: 2px solid var(--ink); outline-offset: -2px; }
+  .hgrid-sleeptag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px;
+    color: var(--sleep); font-weight: 600; }
+  .hgrid-ev { display: inline-flex; align-items: center; gap: 6px; border: 1px solid;
+    border-radius: 999px; padding: 5px 11px 5px 8px; cursor: pointer; font-family: 'Figtree', sans-serif; }
+  .hgrid-ev:hover { filter: brightness(0.97); }
+  .hgrid-ev:active { transform: scale(0.97); }
+  .hgrid-ev-ic { font-size: 13px; line-height: 1; }
+  .hgrid-ev-time { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: var(--ink); }
+
+  @keyframes entryFlash {
+    0% { background: var(--feed-soft); }
+    100% { background: transparent; }
+  }
+  .entry-flash { animation: entryFlash 1.6s ease-out; border-radius: 12px; }
+
   .quick-add { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 20px; }
   .quick-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 18px;
     padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -482,13 +509,6 @@ function nextBreastSide() {
   if (!last || !last.side) return null;
   return last.side === "links" ? "rechts" : "links";
 }
-function reminderMessage() {
-  const last = lastFeedingDateTime();
-  if (last && last.type === "fles") return "Tijd voor de flesvoeding 🍼";
-  const side = nextBreastSide();
-  if (side) return `Tijd voor de borstvoeding — ${side} is aan de beurt`;
-  return "Tijd voor de volgende voeding 🍼";
-}
 // Berekent de countdown-status voor de kaart in "Vandaag"
 function reminderCountdown() {
   const cfg = getReminderCfg();
@@ -753,6 +773,8 @@ function syncCurrentView() {
 // ---------------- icons (inline svg) ----------------
 const ICON = {
   droplet: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.7s6 7.2 6 11.3a6 6 0 1 1-12 0c0-4.1 6-11.3 6-11.3Z"/></svg>`,
+  bottle: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v2.5L8.5 7A2 2 0 0 0 8 8.3V19a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8.3A2 2 0 0 0 15.5 7L14 5.5V3"/><path d="M8 11h8"/><path d="M8 14h4"/></svg>`,
+  breast: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a8 8 0 0 1 16 0c0 5-3.6 9-8 9S4 14 4 9Z"/><circle cx="12" cy="10" r="1.6"/></svg>`,
   circle: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>`,
   thermo: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.5a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>`,
   chevronLeft: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
@@ -771,7 +793,21 @@ const ICON = {
 };
 function kindColor(kind) { return kind === "feedings" ? "var(--feed)" : kind === "diapers" ? "var(--diaper)" : kind === "sleeps" ? "var(--sleep)" : "var(--health)"; }
 function kindSoft(kind) { return kind === "feedings" ? "var(--feed-soft)" : kind === "diapers" ? "var(--diaper-soft)" : kind === "sleeps" ? "var(--sleep-soft)" : "var(--health-soft)"; }
-function kindIcon(kind) { return kind === "feedings" ? ICON.droplet : kind === "diapers" ? ICON.circle : kind === "sleeps" ? ICON.moon : ICON.thermo; }
+function kindIcon(e) {
+  const kind = e.kind || e;
+  if (kind === "feedings") return (e.type === "borst") ? ICON.breast : ICON.bottle;
+  if (kind === "diapers") return ICON.circle;
+  if (kind === "sleeps") return ICON.moon;
+  return ICON.thermo;
+}
+function kindIconSmall(e) {
+  // compacte glyphs voor het dagritme-rooster
+  const kind = e.kind || e;
+  if (kind === "feedings") return (e.type === "borst") ? "🤱" : "🍼";
+  if (kind === "diapers") return "💧";
+  if (kind === "health") return "🌡";
+  return "•";
+}
 function labelFor(e) {
   if (e.kind === "feedings") {
     if (e.type === "borst") {
@@ -875,22 +911,42 @@ function renderDagView() {
 
     <div class="card">
       <div class="ribbon-title">${ICON.sunrise} Dagritme</div>
-      <div class="ribbon-wrap">
-        <div class="ribbon-track">
-          ${day.sleeps.map(s => {
-            const startMin = timeToMinutes(s.start);
-            let endMin = timeToMinutes(s.end);
-            if (endMin < startMin) endMin = 1440;
-            const left = (startMin/1440)*100, width = ((endMin-startMin)/1440)*100;
-            return `<div class="ribbon-sleep" title="Slaap ${s.start} – ${s.end} · ${escapeHtml(fmtDuration(sleepMinutes(s)))}" style="left:${left}%; width:${width}%"></div>`;
-          }).join("")}
-          ${entries.filter(e=>e.kind!=="sleeps").map(e => `<div class="ribbon-marker" title="${e.time} — ${escapeHtml(labelFor(e))}"
-              style="left:${(timeToMinutes(e.time)/1440)*100}%; background:${kindColor(e.kind)}"></div>`).join("")}
-          ${isToday ? `<div class="ribbon-now" style="left:${(nowMinutes/1440)*100}%"></div>` : ""}
-        </div>
-        <div class="ribbon-ticks"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
-      </div>
-      ${entries.length === 0 ? `<div class="ribbon-empty">Nog niets geregistreerd voor deze dag.</div>` : ""}
+      ${entries.length === 0
+        ? `<div class="ribbon-empty">Nog niets geregistreerd voor deze dag.</div>`
+        : (() => {
+          const nowHour = isToday ? Math.floor(nowMinutes/60) : -1;
+          // per uur: welke slaap-sessies overlappen dit uur, en welke gebeurtenissen vallen erin
+          const sleepAtHour = (h) => day.sleeps.some(s => {
+            const a = timeToMinutes(s.start); let b = timeToMinutes(s.end);
+            if (b <= a) b = 1440;
+            return a < (h+1)*60 && b > h*60;
+          });
+          const evByHour = {};
+          entries.filter(e => e.kind !== "sleeps").forEach(e => {
+            const h = Math.floor(timeToMinutes(e.time)/60);
+            (evByHour[h] = evByHour[h] || []).push(e);
+          });
+          // welke uren tonen we: uren met gebeurtenissen, uren met slaap, en het huidige uur
+          const show = new Set();
+          for (let h=0; h<24; h++) if (evByHour[h] || sleepAtHour(h) || h===nowHour) show.add(h);
+          const rows = [...show].sort((a,b)=>a-b);
+          return `<div class="hgrid">
+            ${rows.map(h => {
+              const sleeping = sleepAtHour(h);
+              const evs = (evByHour[h]||[]).sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
+              return `<div class="hgrid-row ${h===nowHour ? "now" : ""} ${sleeping ? "sleeping" : ""}">
+                <div class="hgrid-hour">${pad(h)}u</div>
+                <div class="hgrid-cells">
+                  ${sleeping && !evs.length ? `<span class="hgrid-sleeptag">${ICON.moon} slaap</span>` : ""}
+                  ${evs.map(e => `<button class="hgrid-ev" data-action="goto-entry" data-id="${e.id}" title="${escapeHtml(labelFor(e))}" style="border-color:${kindColor(e.kind)}; background:${kindSoft(e.kind)}">
+                      <span class="hgrid-ev-ic" style="color:${kindColor(e.kind)}">${kindIconSmall(e)}</span>
+                      <span class="hgrid-ev-time">${e.time}</span>
+                    </button>`).join("")}
+                </div>
+              </div>`;
+            }).join("")}
+          </div>`;
+        })()}
     </div>
 
     <div class="stats-row">
@@ -915,9 +971,9 @@ function renderDagView() {
       ${entries.length === 0
         ? `<div class="empty-state">Nog geen registraties. Voeg hierboven een voeding, luier of meting toe.</div>`
         : entries.map(e => `
-          <div class="entry">
+          <div class="entry" id="entry-${e.id}">
             <div class="entry-time mono">${e.time}</div>
-            <div class="entry-icon" style="background:${kindSoft(e.kind)}; color:${kindColor(e.kind)}">${kindIcon(e.kind)}</div>
+            <div class="entry-icon" style="background:${kindSoft(e.kind)}; color:${kindColor(e.kind)}">${kindIcon(e)}</div>
             <div class="entry-body">
               <div class="entry-title">${escapeHtml(labelFor(e))}</div>
               ${entrySub(e) ? `<div class="entry-sub">${entrySub(e)}</div>` : ""}
@@ -933,14 +989,13 @@ function renderDagView() {
 
 function renderReminderCard() {
   const c = reminderCountdown();
-  const permBlocked = typeof Notification !== "undefined" && Notification.permission === "denied";
 
   if (!c.enabled) {
     return `
     <div class="reminder-card off">
       <div class="reminder-main">
         <div class="reminder-lbl">Voedingsherinnering</div>
-        <div class="reminder-sub">Sta een melding toe wanneer het tijd is voor de volgende voeding.</div>
+        <div class="reminder-sub">Stel een interval in om de aftelklok tot de volgende voeding te tonen.</div>
       </div>
       <button class="reminder-btn" data-action="open-modal" data-modal="herinnering">Instellen</button>
     </div>`;
@@ -964,7 +1019,7 @@ function renderReminderCard() {
   return `
     <div class="reminder-card ${due ? "due" : ""}">
       <div class="reminder-main">
-        <div class="reminder-lbl">Volgende voeding ${permBlocked ? "· meldingen geblokkeerd" : ""}</div>
+        <div class="reminder-lbl">Volgende voeding</div>
         <div class="reminder-big">${big}</div>
         <div class="reminder-sub">${sub}</div>
       </div>
@@ -1001,6 +1056,7 @@ function googleCalUrl(appt) {
   if (appt.note) params.set("details", appt.note);
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
+
 function renderAgendaView() {
   const list = [...state.appointments].filter(a => a && a.date)
     .sort((a,b) => (a.date+"T"+(a.time||"00:00")).localeCompare(b.date+"T"+(b.time||"00:00")));
@@ -1396,7 +1452,6 @@ function instellingenModal() {
 function reminderModal() {
   const cfg = getReminderCfg();
   const presets = [60, 90, 120, 150, 180, 210, 240];
-  const permState = typeof Notification === "undefined" ? "unsupported" : Notification.permission;
   const hours = Math.floor(cfg.intervalMin / 60), mins = cfg.intervalMin % 60;
   return `
   <div class="modal-overlay" data-action="close-modal">
@@ -1424,11 +1479,8 @@ function reminderModal() {
         </div>
       </div>
 
-      ${permState === "denied" ? `<div class="sync-note" style="color:var(--health)">Meldingen staan geblokkeerd voor deze site. Zet ze aan via het slotje in de adresbalk (of de app-instellingen) om herinneringen te ontvangen.</div>`
-        : permState === "unsupported" ? `<div class="sync-note">Deze browser ondersteunt geen meldingen. De aftelklok in de app werkt wel.</div>`
-        : `<div class="sync-note">Voor betrouwbare meldingen: open de app via je startscherm-icoon (Chrome-menu ⋮ → "App installeren"). Meldingen werken niet als je het HTML-bestand rechtstreeks opent — enkel via de online (https) versie.</div>`}
+      <div class="sync-note">De app toont een aftelklok tot de volgende voeding, op basis van de laatste voeding + dit interval.</div>
 
-      ${permState !== "unsupported" ? `<button class="reminder-btn" style="width:100%; justify-content:center; margin-bottom:10px" data-action="test-notification">Testmelding sturen</button>` : ""}
       <button class="submit-btn" style="background:var(--feed)" data-action="save-reminder">Opslaan</button>
     </div>
   </div>`;
@@ -1572,6 +1624,15 @@ function onAction(ev) {
     queueDelete(el.dataset.id);
     render();
   }
+  else if (action === "goto-entry") {
+    const target = document.getElementById("entry-" + el.dataset.id);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      target.classList.remove("entry-flash");
+      void target.offsetWidth; // reset animatie
+      target.classList.add("entry-flash");
+    }
+  }
   else if (action === "edit-appt") {
     const a = state.appointments.find(x => x.id === el.dataset.id);
     if (!a) return;
@@ -1617,25 +1678,7 @@ function onAction(ev) {
     let intervalMin = h * 60 + m;
     if (intervalMin < 5) intervalMin = 5; // ondergrens
     setReminderCfg({ enabled, intervalMin });
-    lastNotifiedFor = null;
-    if (enabled && typeof Notification !== "undefined" && Notification.permission === "default") {
-      Notification.requestPermission().then(() => { state.modal = null; render(); scheduleReminder(); });
-    } else {
-      state.modal = null; render(); scheduleReminder();
-    }
-  }
-  else if (action === "test-notification") {
-    const doTest = async () => {
-      const title = getAppName();
-      const opts = { body: "Zo ziet een voedingsherinnering eruit 🍼", tag: "baby-test", renotify: true };
-      try {
-        if (swReg && swReg.showNotification) await swReg.showNotification(title, opts);
-        else if (typeof Notification !== "undefined") new Notification(title, opts);
-      } catch (e) {}
-    };
-    if (typeof Notification === "undefined") return;
-    if (Notification.permission === "granted") doTest();
-    else if (Notification.permission === "default") Notification.requestPermission().then(p => { if (p === "granted") doTest(); render(); });
+    state.modal = null; render();
   }
   else if (action === "save-instellingen") {
     const newName = document.getElementById("app-name-input").value;
@@ -1709,8 +1752,7 @@ function onAction(ev) {
       day.feedings.push(entry);
     }
     persistDay(state.selectedDate, { kind: "feedings", entry });
-    lastNotifiedFor = null;
-    state.editEntry = null; state.modal = null; render(); scheduleReminder();
+    state.editEntry = null; state.modal = null; render();
   }
   else if (action === "save-diaper") {
     const ed = state.editEntry;
@@ -1768,87 +1810,15 @@ function onAction(ev) {
   }
 }
 
-// ---------------- service worker (nodig voor meldingen op Android) ----------------
-let swReg = null;
-async function initServiceWorker() {
-  if (!("serviceWorker" in navigator)) return;
-  try {
-    swReg = await navigator.serviceWorker.register("sw.js");
-    await navigator.serviceWorker.ready;
-    scheduleReminder();
-  } catch (e) { /* zonder service worker vallen we terug op desktop-meldingen */ }
-}
-
-// ---------------- herinnering-scheduler ----------------
-let reminderTimer = null;
-let lastNotifiedFor = null; // tijdstip (ms) waarvoor al een melding is getoond
-const REMINDER_TAG = "baby-voeding";
-
-function nextReminderTime() {
-  const cfg = getReminderCfg();
-  if (!cfg.enabled) return null;
-  const last = lastFeedingDateTime();
-  if (!last) return null;
-  return last.dt.getTime() + cfg.intervalMin * 60000;
-}
-
-async function scheduleReminder() {
-  if (reminderTimer) { clearTimeout(reminderTimer); reminderTimer = null; }
-  const cfg = getReminderCfg();
-  if (!cfg.enabled) return;
-  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
-  const target = nextReminderTime();
-  if (!target) return;
-
-  // Voorkeur: een geplande melding via de service worker (gaat ook af als de app
-  // dicht is), waar de browser TimestampTrigger ondersteunt.
-  if (swReg && "showTrigger" in Notification.prototype && typeof TimestampTrigger !== "undefined") {
-    try {
-      const pending = await swReg.getNotifications({ tag: REMINDER_TAG, includeTriggered: true });
-      pending.forEach(n => n.close());
-      await swReg.showNotification(getAppName(), {
-        body: reminderMessage(),
-        tag: REMINDER_TAG,
-        showTrigger: new TimestampTrigger(target),
-      });
-      return;
-    } catch (e) { /* val terug op setTimeout hieronder */ }
-  }
-
-  // Fallback: setTimeout terwijl de app open of op de achtergrond leeft.
-  const delay = target - Date.now();
-  if (delay <= 0) fireReminder(target);
-  else reminderTimer = setTimeout(() => fireReminder(target), delay);
-}
-
-async function fireReminder(target) {
-  if (lastNotifiedFor === target) return; // niet dubbel melden voor dezelfde voeding
-  lastNotifiedFor = target;
-  const title = getAppName();
-  const opts = { body: reminderMessage(), tag: REMINDER_TAG, renotify: true };
-  try {
-    if (swReg && swReg.showNotification) {
-      await swReg.showNotification(title, opts);           // werkt op Android
-    } else if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: "show-notification", title, ...opts });
-    } else if (typeof Notification !== "undefined") {
-      new Notification(title, opts);                        // desktop-fallback
-    }
-  } catch (e) { /* melding niet mogelijk */ }
-}
-
-// Elke minuut de countdown verversen en de planning herzien (bv. na nieuwe voeding
-// of na terugkeren uit de achtergrond).
+// ---------------- aftelklok verversen ----------------
+// De aftelklok tot de volgende voeding wordt elke minuut bijgewerkt,
+// en telkens de app weer op de voorgrond komt.
 setInterval(() => {
   if (state.activeTab === "dag" && !state.modal) render();
-  scheduleReminder();
 }, 60000);
 
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") {
-    scheduleReminder();
-    if (state.activeTab === "dag" && !state.modal) render();
-  }
+  if (document.visibilityState === "visible" && state.activeTab === "dag" && !state.modal) render();
 });
 
 // ---------------- PWA manifest + documenttitel (naam is instelbaar) ----------------
@@ -1885,8 +1855,6 @@ applyAppName();
 state.appointments = loadAppointments();
 initSync();
 render();
-scheduleReminder();
-initServiceWorker();
 if (SYNC.enabled) {
   syncCurrentView();
   setInterval(() => { if (!state.modal) syncCurrentView(); }, 20000);
