@@ -3,8 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Osjes Dagboek — voeding &amp; luiers bijhouden</title>
-<link rel="icon" href="data:,">
+<title>Baby dagboek — voeding &amp; luiers bijhouden</title>
+<meta name="theme-color" content="#7C9473">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Baby dagboek">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%237C9473'/%3E%3Ctext x='90' y='120' font-size='90' text-anchor='middle' fill='white' font-family='sans-serif'%3E%F0%9F%8D%BC%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237C9473'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='sans-serif'%3E%F0%9F%8D%BC%3C/text%3E%3C/svg%3E">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -40,7 +45,7 @@
   .shell { max-width: 760px; margin: 0 auto; padding: 32px 22px 76px; }
 
   .top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; }
-  .brand { font-family: 'Fraunces', serif; font-weight: 600; font-size: 28px; letter-spacing: -0.01em; }
+  .brand { font-family: 'Fraunces', serif; font-weight: 600; font-size: 28px; letter-spacing: -0.01em; cursor: pointer; }
   .brand .dot { color: var(--feed); }
   .tagline { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
 
@@ -56,9 +61,12 @@
     cursor: pointer; padding: 0 0 12px; font-family: 'Figtree', sans-serif; }
 
   .tabs { display: flex; gap: 6px; background: var(--surface-soft); border: 1px solid var(--line);
-    border-radius: 999px; padding: 4px; width: fit-content; margin-bottom: 20px; }
+    border-radius: 999px; padding: 4px; width: fit-content; max-width: 100%; margin-bottom: 20px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tabs::-webkit-scrollbar { display: none; }
   .tab-btn { border: none; background: transparent; padding: 8px 18px; border-radius: 999px;
-    font-size: 14px; font-weight: 600; color: var(--ink-soft); cursor: pointer; font-family: 'Figtree', sans-serif; }
+    font-size: 14px; font-weight: 600; color: var(--ink-soft); cursor: pointer; font-family: 'Figtree', sans-serif;
+    white-space: nowrap; }
   .tab-btn.active { background: var(--ink); color: var(--surface); }
 
   .date-nav, .week-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
@@ -105,6 +113,24 @@
   .stat-chip .num { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; }
   .stat-chip .lbl { color: var(--ink-soft); }
 
+  .reminder-card { display: flex; align-items: center; gap: 14px; background: var(--feed-soft);
+    border: 1px solid var(--feed); border-radius: 20px; padding: 16px 18px; margin-bottom: 18px; }
+  .reminder-card.off { background: var(--surface); border-color: var(--line); }
+  .reminder-card.due { background: var(--diaper-soft); border-color: var(--diaper); }
+  .reminder-main { flex: 1; min-width: 0; }
+  .reminder-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+  .reminder-big { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; margin: 2px 0; line-height: 1.1; }
+  .reminder-sub { font-size: 12.5px; color: var(--ink-soft); }
+  .reminder-btn { border: 1px solid var(--feed); background: var(--surface); color: var(--feed);
+    border-radius: 14px; padding: 10px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: 'Figtree', sans-serif; flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+  .reminder-btn:hover { background: var(--feed-soft); }
+  .reminder-presets { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip-btn { border: 1px solid var(--line); background: var(--surface-soft); color: var(--ink);
+    border-radius: 999px; padding: 7px 13px; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'Figtree', sans-serif; }
+  .chip-btn.on { background: var(--feed); color: var(--surface); border-color: transparent; }
+
   .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--ink-soft); margin: 4px 0 10px; }
   .chart-sub { font-size: 12px; color: var(--ink-soft); margin: -6px 0 14px; }
@@ -121,6 +147,10 @@
   .entry-del { border: none; background: transparent; cursor: pointer; color: var(--ink-soft);
     padding: 6px; border-radius: 8px; flex-shrink: 0; }
   .entry-del:hover { background: var(--surface-soft); color: var(--health); }
+  .entry-edit { border: none; background: transparent; cursor: pointer; color: var(--ink-soft);
+    padding: 6px; border-radius: 8px; flex-shrink: 0; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; }
+  .entry-edit:hover { background: var(--surface-soft); color: var(--feed); }
 
   .empty-state { text-align: center; padding: 30px 10px; color: var(--ink-soft); font-size: 14px; }
 
@@ -355,12 +385,105 @@ function loadDay(dateStr) {
 function saveDay(dateStr, data) {
   localStorage.setItem(STORAGE_PREFIX + dateStr, JSON.stringify(data));
 }
+const DEFAULT_APP_NAME = "Baby dagboek";
+function getAppName() {
+  const n = localStorage.getItem("babyritme:appName");
+  return (n && n.trim()) ? n.trim() : DEFAULT_APP_NAME;
+}
+function setAppName(name) {
+  const clean = (name || "").trim();
+  if (clean) localStorage.setItem("babyritme:appName", clean);
+  else localStorage.removeItem("babyritme:appName");
+}
+function getBirthDate() {
+  const b = localStorage.getItem("babyritme:birthDate");
+  return (b && /^\d{4}-\d{2}-\d{2}$/.test(b)) ? b : null;
+}
+function setBirthDate(dateStr) {
+  if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) localStorage.setItem("babyritme:birthDate", dateStr);
+  else localStorage.removeItem("babyritme:birthDate");
+}
+// Leeftijd in weken + maanden, netjes leesbaar in het Nederlands
+function ageText(birth) {
+  if (!birth) return "";
+  const [by,bm,bd] = birth.split("-").map(Number);
+  const b = new Date(by, bm-1, bd);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (b > today) return "nog niet geboren";
+  const days = Math.floor((today - b) / 86400000);
+  const weeks = Math.floor(days / 7);
+  // volledige kalendermaanden
+  let months = (today.getFullYear()-by)*12 + (today.getMonth()-(bm-1));
+  if (today.getDate() < bd) months--;
+  if (months < 0) months = 0;
+  const wLabel = weeks === 1 ? "1 week" : `${weeks} weken`;
+  const mLabel = months === 1 ? "1 maand" : `${months} maanden`;
+  if (days < 7) return days === 0 ? "pasgeboren" : days === 1 ? "1 dag oud" : `${days} dagen oud`;
+  if (months < 1) return `${wLabel} oud`;
+  return `${wLabel} · ${mLabel} oud`;
+}
 function getLastBreastSide() {
   try { return JSON.parse(localStorage.getItem("babyritme:lastSide") || "null"); } catch (e) { return null; }
 }
 function setLastBreastSide(side, time, date) {
   if (!side) return;
   localStorage.setItem("babyritme:lastSide", JSON.stringify({ side, time, date }));
+}
+
+// ---------------- herinnering (lokale melding) ----------------
+function getReminderCfg() {
+  try {
+    const c = JSON.parse(localStorage.getItem("babyritme:reminder") || "null");
+    if (c && typeof c.intervalMin === "number") return c;
+  } catch (e) {}
+  return { enabled: false, intervalMin: 180 }; // standaard 3 uur, uit
+}
+function setReminderCfg(cfg) {
+  localStorage.setItem("babyritme:reminder", JSON.stringify(cfg));
+}
+// Datum-tijd (JS Date) van de laatst geregistreerde voeding, over alle dagen heen
+function lastFeedingDateTime() {
+  let best = null;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k || !k.startsWith(STORAGE_PREFIX)) continue;
+    const dateStr = k.slice(STORAGE_PREFIX.length);
+    let day; try { day = JSON.parse(localStorage.getItem(k)); } catch (e) { continue; }
+    (day.feedings || []).forEach(f => {
+      if (!f.time) return;
+      const [y,m,d] = dateStr.split("-").map(Number);
+      const [hh,mm] = f.time.split(":").map(Number);
+      const dt = new Date(y, m-1, d, hh, mm);
+      const type = f.type || "borst";
+      if (!best || dt > best.dt) best = { dt, type, side: f.side || null };
+    });
+  }
+  return best;
+}
+// Volgende kant bij borstvoeding = de andere dan de laatst gebruikte
+function nextBreastSide() {
+  const last = getLastBreastSide();
+  if (!last || !last.side) return null;
+  return last.side === "links" ? "rechts" : "links";
+}
+function reminderMessage() {
+  const last = lastFeedingDateTime();
+  if (last && last.type === "fles") return "Tijd voor de flesvoeding 🍼";
+  const side = nextBreastSide();
+  if (side) return `Tijd voor de borstvoeding — ${side} is aan de beurt`;
+  return "Tijd voor de volgende voeding 🍼";
+}
+// Berekent de countdown-status voor de kaart in "Vandaag"
+function reminderCountdown() {
+  const cfg = getReminderCfg();
+  if (!cfg.enabled) return { enabled: false };
+  const last = lastFeedingDateTime();
+  if (!last) return { enabled: true, noFeeds: true, intervalMin: cfg.intervalMin };
+  const target = last.dt.getTime() + cfg.intervalMin * 60000;
+  const diffMin = Math.round((target - Date.now()) / 60000);
+  const side = last.type === "fles" ? null : nextBreastSide();
+  return { enabled: true, target, diffMin, type: last.type, side, intervalMin: cfg.intervalMin };
 }
 
 // ---------------- sync (Supabase) ----------------
@@ -446,6 +569,124 @@ function queueDelete(id) {
   flushOutbox();
 }
 
+// De app-naam als gedeelde gezinsinstelling (aparte rij in de entries-tabel,
+// zodat de database niet gewijzigd hoeft te worden).
+const APP_NAME_ROW_ID = "settings:appName";
+function queueAppName(name) {
+  if (!SYNC.enabled) return;
+  outboxAdd({ op: "upsert", row: {
+    id: APP_NAME_ROW_ID, family_code: SYNC.code, date: "1970-01-01",
+    kind: "settings", data: { key: "appName", value: name },
+  }});
+  flushOutbox();
+}
+async function pullAppName() {
+  if (!SYNC.enabled) return;
+  try {
+    const rows = await sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&id=eq.${encodeURIComponent(APP_NAME_ROW_ID)}&select=data`);
+    if (rows && rows.length && rows[0].data && rows[0].data.value) {
+      const cloudName = String(rows[0].data.value).trim();
+      if (cloudName && cloudName !== getAppName()) {
+        setAppName(cloudName);
+        applyAppName();
+        if (!state.modal) render();
+      }
+    }
+  } catch (e) { /* stil negeren */ }
+}
+// Bij eerste keer verbinden: cloud-naam is leidend; is er geen, upload de lokale.
+async function reconcileAppName() {
+  if (!SYNC.enabled) return;
+  try {
+    const rows = await sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&id=eq.${encodeURIComponent(APP_NAME_ROW_ID)}&select=data`);
+    const cloudName = rows && rows.length && rows[0].data ? String(rows[0].data.value || "").trim() : "";
+    if (cloudName) {
+      if (cloudName !== getAppName()) { setAppName(cloudName); applyAppName(); if (!state.modal) render(); }
+    } else {
+      const local = localStorage.getItem("babyritme:appName");
+      if (local && local.trim()) queueAppName(local.trim());
+    }
+  } catch (e) { /* stil negeren */ }
+}
+
+// Geboortedatum als gedeelde gezinsinstelling (zelfde principe als de naam).
+const BIRTH_ROW_ID = "settings:birthDate";
+function queueBirthDate(value) {
+  if (!SYNC.enabled) return;
+  outboxAdd({ op: "upsert", row: {
+    id: BIRTH_ROW_ID, family_code: SYNC.code, date: "1970-01-01",
+    kind: "settings", data: { key: "birthDate", value },
+  }});
+  flushOutbox();
+}
+async function pullBirthDate() {
+  if (!SYNC.enabled) return;
+  try {
+    const rows = await sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&id=eq.${encodeURIComponent(BIRTH_ROW_ID)}&select=data`);
+    if (rows && rows.length && rows[0].data) {
+      const cloud = String(rows[0].data.value || "").trim();
+      if (cloud !== (getBirthDate() || "")) { setBirthDate(cloud); if (!state.modal) render(); }
+    }
+  } catch (e) { /* stil negeren */ }
+}
+async function reconcileBirthDate() {
+  if (!SYNC.enabled) return;
+  try {
+    const rows = await sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&id=eq.${encodeURIComponent(BIRTH_ROW_ID)}&select=data`);
+    const cloud = rows && rows.length && rows[0].data ? String(rows[0].data.value || "").trim() : null;
+    if (cloud) {
+      if (cloud !== (getBirthDate() || "")) { setBirthDate(cloud); if (!state.modal) render(); }
+    } else {
+      const local = getBirthDate();
+      if (local) queueBirthDate(local);
+    }
+  } catch (e) { /* stil negeren */ }
+}
+
+// ---------------- agenda-afspraken ----------------
+function loadAppointments() {
+  try {
+    const a = JSON.parse(localStorage.getItem("babyritme:appointments") || "[]");
+    return Array.isArray(a) ? a : [];
+  } catch (e) { return []; }
+}
+function saveAppointments(list) {
+  localStorage.setItem("babyritme:appointments", JSON.stringify(list));
+}
+function queueAppointment(appt) {
+  if (!SYNC.enabled) return;
+  outboxAdd({ op: "upsert", row: {
+    id: appt.id, family_code: SYNC.code, date: appt.date, kind: "appointment", data: appt,
+  }});
+  flushOutbox();
+}
+async function pullAppointments() {
+  if (!SYNC.enabled) return;
+  try {
+    const rows = await sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&kind=eq.appointment&select=id,data`);
+    if (!rows) return;
+    const list = rows.map(r => r.data).filter(Boolean);
+    state.appointments = list;
+    saveAppointments(list);
+    if (!state.modal && state.activeTab === "agenda") render();
+  } catch (e) { /* stil negeren */ }
+}
+async function reconcileAppointments() {
+  if (!SYNC.enabled) return;
+  try {
+    const rows = await sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&kind=eq.appointment&select=id,data`) || [];
+    const cloudIds = new Set(rows.map(r => r.id));
+    // lokale afspraken die nog niet in de cloud staan, uploaden
+    loadAppointments().forEach(a => { if (a && a.id && !cloudIds.has(a.id)) queueAppointment(a); });
+    // en de samengevoegde lijst lokaal zetten
+    const merged = {};
+    rows.forEach(r => { if (r.data) merged[r.id] = r.data; });
+    loadAppointments().forEach(a => { if (a && a.id && !merged[a.id]) merged[a.id] = a; });
+    state.appointments = Object.values(merged);
+    saveAppointments(state.appointments);
+  } catch (e) { /* stil negeren */ }
+}
+
 // upload alle bestaande lokale gegevens (bij eerste keer verbinden)
 async function uploadAllLocal() {
   if (!SYNC.enabled) return;
@@ -468,6 +709,9 @@ async function syncPull(from, to) {
   SYNC.pulling = true; setStatus("syncing");
   try {
     await flushOutbox();
+    pullAppName();
+    pullBirthDate();
+    pullAppointments();
     const rows = await sbPull(from, to) || [];
     const byDate = {};
     datesBetween(from, to).forEach(d => byDate[d] = emptyDay());
@@ -487,6 +731,7 @@ function syncCurrentView() {
   if (!SYNC.enabled) return;
   if (state.activeTab === "week") { const w = weekDates(state.selectedDate); syncPull(w[0], w[6]); }
   else if (state.activeTab === "rapport") { syncPull(state.report.from, state.report.to); }
+  else if (state.activeTab === "agenda") { pullAppointments(); pullBirthDate(); pullAppName(); }
   else { syncPull(state.selectedDate, state.selectedDate); }
 }
 
@@ -498,12 +743,16 @@ const ICON = {
   chevronLeft: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
   chevronRight: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`,
   trash: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`,
+  pencil: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`,
   x: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>`,
   sunrise: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>`,
   moon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6.36 6.36 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
   printer: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>`,
   download: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>`,
   gear: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  calendar: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>`,
+  plus: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
+  extlink: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`,
 };
 function kindColor(kind) { return kind === "feedings" ? "var(--feed)" : kind === "diapers" ? "var(--diaper)" : kind === "sleeps" ? "var(--sleep)" : "var(--health)"; }
 function kindSoft(kind) { return kind === "feedings" ? "var(--feed-soft)" : kind === "diapers" ? "var(--diaper-soft)" : kind === "sleeps" ? "var(--sleep-soft)" : "var(--health-soft)"; }
@@ -512,7 +761,7 @@ function labelFor(e) {
   if (e.kind === "feedings") {
     if (e.type === "borst") {
       const links = Number(e.left) || 0, rechts = Number(e.right) || 0;
-      const duur = `L ${links}m · R ${rechts}m`;
+      const duur = `L ${fmtDuration(links)} · R ${fmtDuration(rechts)}`;
       const kant = e.side === "links" ? "laatst links" : e.side === "rechts" ? "laatst rechts" : "";
       return `${FEED_LABEL[e.type]} · ${duur}${kant ? " · " + kant : ""}`;
     }
@@ -537,6 +786,9 @@ const state = {
   activeTab: "dag",
   days: {},          // dateStr -> {feedings, diapers, health, sleeps}
   modal: null,       // 'voeding' | 'luier' | 'slaap' | 'meting' | null
+  editEntry: null,   // de te bewerken registratie (of null bij nieuwe)
+  appointments: [],  // agenda-afspraken {id, date, time, title, note}
+  editAppt: null,    // de te bewerken afspraak (of null bij nieuwe)
   report: { preset: "week", from: mondayOf(todayStr()), to: addDays(mondayOf(todayStr()), 6) },
 };
 
@@ -557,8 +809,8 @@ function render() {
     <div class="shell">
       <div class="top">
         <div>
-          <div class="brand">Osjes Dagboek<span class="dot">.</span></div>
-          <div class="tagline">voeding, luiers en metingen, dag na dag</div>
+          <div class="brand" data-action="open-modal" data-modal="instellingen" title="Tik voor instellingen">${escapeHtml(getAppName())}<span class="dot">.</span></div>
+          <div class="tagline">${getBirthDate() ? ageText(getBirthDate()) : "voeding, luiers en metingen, dag na dag"}</div>
         </div>
         <button class="sync-btn" data-action="open-modal" data-modal="sync" title="${SYNC.lastStatus}">
           ${ICON.gear}<span class="sync-dot" style="background:${syncDotColor()}"></span>
@@ -567,9 +819,10 @@ function render() {
       <div class="tabs">
         <button class="tab-btn ${state.activeTab==='dag'?'active':''}" data-action="tab" data-tab="dag">Vandaag</button>
         <button class="tab-btn ${state.activeTab==='week'?'active':''}" data-action="tab" data-tab="week">Weekoverzicht</button>
+        <button class="tab-btn ${state.activeTab==='agenda'?'active':''}" data-action="tab" data-tab="agenda">Agenda</button>
         <button class="tab-btn ${state.activeTab==='rapport'?'active':''}" data-action="tab" data-tab="rapport">Rapport</button>
       </div>
-      ${state.activeTab === "dag" ? renderDagView() : state.activeTab === "week" ? renderWeekView() : renderReportView()}
+      ${state.activeTab === "dag" ? renderDagView() : state.activeTab === "week" ? renderWeekView() : state.activeTab === "agenda" ? renderAgendaView() : renderReportView()}
       <div class="storage-note">${SYNC.enabled
         ? "Gesynchroniseerd via je gezinscode — wijzigingen verschijnen op al je toestellen."
         : "Gegevens worden lokaal in deze browser bewaard (localStorage) — niet automatisch gedeeld tussen toestellen. Tik op het tandwiel om te synchroniseren."}</div>
@@ -589,11 +842,13 @@ function renderDagView() {
   ].sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
 
   const totalMl = day.feedings.filter(f=>f.type==="fles").reduce((s,f)=>s+(Number(f.amount)||0),0);
-  const totalBorstMin = day.feedings.filter(f=>f.type==="borst").reduce((s,f)=>s+(Number(f.left)||0)+(Number(f.right)||0),0);
+  const borstFeeds = day.feedings.filter(f=>f.type==="borst");
+  const totalBorstMin = borstFeeds.reduce((s,f)=>s+(Number(f.left)||0)+(Number(f.right)||0),0);
   const totalSleep = day.sleeps.reduce((s,x)=>s+sleepMinutes(x),0);
   const isToday = state.selectedDate === todayStr();
   const nowMinutes = timeToMinutes(nowTimeStr());
-  const lastSide = getLastBreastSide();
+  const lastBorst = borstFeeds.filter(f=>f.side).sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time)).pop();
+  const lastSide = lastBorst ? { side: lastBorst.side } : null;
 
   return `
     <div class="date-nav">
@@ -625,11 +880,13 @@ function renderDagView() {
 
     <div class="stats-row">
       <div class="stat-chip"><span class="num mono">${day.feedings.length}</span><span class="lbl">voeding${day.feedings.length === 1 ? "" : "en"}</span></div>
-      <div class="stat-chip"><span class="num mono">${totalBorstMin}m</span><span class="lbl">borst${lastSide ? " · laatst " + (lastSide.side === "links" ? "L" : "R") : ""}</span></div>
+      <div class="stat-chip"><span class="num mono">${fmtDuration(totalBorstMin)}</span><span class="lbl">borst${lastSide ? " · laatst " + (lastSide.side === "links" ? "L" : "R") : ""}</span></div>
       <div class="stat-chip"><span class="num mono">${totalMl}</span><span class="lbl">ml fles</span></div>
       <div class="stat-chip"><span class="num mono">${day.diapers.length}</span><span class="lbl">luier${day.diapers.length === 1 ? "" : "s"}</span></div>
       <div class="stat-chip"><span class="num mono">${totalSleep ? fmtDuration(totalSleep) : "0m"}</span><span class="lbl">slaap</span></div>
     </div>
+
+    ${renderReminderCard()}
 
     <div class="quick-add">
       <button class="quick-btn feed" data-action="open-modal" data-modal="voeding">${ICON.droplet}<span>+ Voeding</span></button>
@@ -650,12 +907,142 @@ function renderDagView() {
               <div class="entry-title">${escapeHtml(labelFor(e))}</div>
               ${entrySub(e) ? `<div class="entry-sub">${entrySub(e)}</div>` : ""}
             </div>
+            <button class="entry-edit" data-action="edit-entry" data-kind="${e.kind}" data-id="${e.id}">${ICON.pencil}</button>
             <button class="entry-del" data-action="delete-entry" data-kind="${e.kind}" data-id="${e.id}">${ICON.trash}</button>
           </div>
         `).join("")
       }
     </div>
   `;
+}
+
+function renderReminderCard() {
+  const c = reminderCountdown();
+  const permBlocked = typeof Notification !== "undefined" && Notification.permission === "denied";
+
+  if (!c.enabled) {
+    return `
+    <div class="reminder-card off">
+      <div class="reminder-main">
+        <div class="reminder-lbl">Voedingsherinnering</div>
+        <div class="reminder-sub">Sta een melding toe wanneer het tijd is voor de volgende voeding.</div>
+      </div>
+      <button class="reminder-btn" data-action="open-modal" data-modal="herinnering">Instellen</button>
+    </div>`;
+  }
+
+  let big, sub;
+  if (c.noFeeds) {
+    big = "—";
+    sub = `Interval ${fmtDuration(c.intervalMin)} · nog geen voeding geregistreerd`;
+  } else if (c.diffMin > 0) {
+    big = `nog ${fmtDuration(c.diffMin)}`;
+    sub = c.side ? `Volgende: borst (${c.side}) · interval ${fmtDuration(c.intervalMin)}`
+                 : `Volgende: ${c.type === "fles" ? "fles" : "voeding"} · interval ${fmtDuration(c.intervalMin)}`;
+  } else {
+    const over = Math.abs(c.diffMin);
+    big = over === 0 ? "nu" : `${fmtDuration(over)} geleden`;
+    sub = c.side ? `Tijd voor borst (${c.side})` : "Tijd voor de volgende voeding";
+  }
+  const due = !c.noFeeds && c.diffMin <= 0;
+
+  return `
+    <div class="reminder-card ${due ? "due" : ""}">
+      <div class="reminder-main">
+        <div class="reminder-lbl">Volgende voeding ${permBlocked ? "· meldingen geblokkeerd" : ""}</div>
+        <div class="reminder-big">${big}</div>
+        <div class="reminder-sub">${sub}</div>
+      </div>
+      <button class="reminder-btn" data-action="open-modal" data-modal="herinnering">${ICON.gear}</button>
+    </div>`;
+}
+
+// ---------------- agenda ----------------
+function formatApptDate(dateStr) {
+  const [y,m,d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m-1, d);
+  return dt.toLocaleDateString("nl-BE", { weekday:"short", day:"numeric", month:"long", year:"numeric" });
+}
+// Bouwt een Google Agenda-link die een afspraak voorinvult
+function googleCalUrl(appt) {
+  const [y,m,d] = appt.date.split("-").map(Number);
+  let startStr, endStr;
+  if (appt.time && /^\d{2}:\d{2}$/.test(appt.time)) {
+    const [hh,mm] = appt.time.split(":").map(Number);
+    const start = new Date(y, m-1, d, hh, mm);
+    const end = new Date(start.getTime() + 60*60000);
+    const f = dt => `${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
+    startStr = f(start); endStr = f(end);
+  } else {
+    const next = new Date(y, m-1, d+1);
+    startStr = `${y}${pad(m)}${pad(d)}`;
+    endStr = `${next.getFullYear()}${pad(next.getMonth()+1)}${pad(next.getDate())}`;
+  }
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: appt.title || "Afspraak baby",
+    dates: `${startStr}/${endStr}`,
+  });
+  if (appt.note) params.set("details", appt.note);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+function renderAgendaView() {
+  const list = [...state.appointments].filter(a => a && a.date)
+    .sort((a,b) => (a.date+"T"+(a.time||"00:00")).localeCompare(b.date+"T"+(b.time||"00:00")));
+  const today = todayStr();
+  const komend = list.filter(a => a.date >= today);
+  const verleden = list.filter(a => a.date < today).reverse();
+
+  const apptRow = a => `
+    <div class="entry">
+      <div class="entry-icon" style="background:var(--sleep-soft); color:var(--sleep)">${ICON.calendar}</div>
+      <div class="entry-body">
+        <div class="entry-title">${escapeHtml(a.title || "Afspraak")}</div>
+        <div class="entry-sub">${formatApptDate(a.date)}${a.time ? " · " + a.time : ""}${a.note ? " · " + escapeHtml(a.note) : ""}</div>
+      </div>
+      <a class="entry-edit" href="${googleCalUrl(a)}" target="_blank" rel="noopener" title="In Google Agenda zetten">${ICON.extlink}</a>
+      <button class="entry-edit" data-action="edit-appt" data-id="${a.id}">${ICON.pencil}</button>
+      <button class="entry-del" data-action="delete-appt" data-id="${a.id}">${ICON.trash}</button>
+    </div>`;
+
+  return `
+    <div class="week-nav">
+      <div class="week-label">Agenda</div>
+      <button class="today-btn" data-action="open-modal" data-modal="afspraak">${ICON.plus} Afspraak</button>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Komende afspraken</div>
+      ${komend.length ? komend.map(apptRow).join("")
+        : `<div class="empty-state">Nog geen komende afspraken. Voeg er een toe met de knop hierboven.</div>`}
+    </div>
+
+    ${verleden.length ? `
+    <div class="card">
+      <div class="section-title">Voorbije afspraken</div>
+      ${verleden.map(apptRow).join("")}
+    </div>` : ""}
+  `;
+}
+function afspraakModal() {
+  const ed = state.editAppt;
+  const dateVal = ed ? ed.date : todayStr();
+  const timeVal = ed && ed.time ? ed.time : "";
+  const titleVal = ed && ed.title ? escapeHtml(ed.title) : "";
+  const noteVal = ed && ed.note ? escapeHtml(ed.note) : "";
+  return `
+  <div class="modal-overlay" data-action="close-modal">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-head"><div class="modal-title">Afspraak ${ed ? "bewerken" : "toevoegen"}</div>
+        <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
+      <div class="field"><label>Titel</label>
+        <input type="text" id="a-title" value="${titleVal}" placeholder="bv. Consultatie Kind & Gezin" maxlength="80"></div>
+      <div class="field"><label>Datum</label><input type="date" id="a-date" value="${dateVal}"></div>
+      <div class="field"><label>Tijdstip (optioneel)</label><input type="time" id="a-time" value="${timeVal}"></div>
+      <div class="field"><label>Notitie (optioneel)</label><textarea id="a-note" placeholder="bv. adres, wat meebrengen">${noteVal}</textarea></div>
+      <button class="submit-btn" style="background:var(--feed)" data-action="save-afspraak">Afspraak ${ed ? "bijwerken" : "opslaan"}</button>
+    </div>
+  </div>`;
 }
 
 function renderWeekView() {
@@ -902,31 +1289,41 @@ function renderModal() {
   if (state.modal === "luier") return diaperModal();
   if (state.modal === "slaap") return sleepModal();
   if (state.modal === "meting") return healthModal();
+  if (state.modal === "herinnering") return reminderModal();
+  if (state.modal === "instellingen") return instellingenModal();
+  if (state.modal === "afspraak") return afspraakModal();
   if (state.modal === "sync") return syncModal();
   return "";
 }
 
 function feedingModal() {
+  const ed = state.editEntry;
+  const type = ed ? ed.type : "borst";
   const last = getLastBreastSide();
-  const lastHint = last ? `Laatste kant was <strong>${last.side === "links" ? "links" : "rechts"}</strong>${last.date ? ` (${formatDateNice(last.date)}${last.time ? ", " + last.time : ""})` : ""}.` : "";
-  const defaultSide = last ? last.side : "links";
+  const lastHint = (!ed && last) ? `Laatste kant was <strong>${last.side === "links" ? "links" : "rechts"}</strong>${last.date ? ` (${formatDateNice(last.date)}${last.time ? ", " + last.time : ""})` : ""}.` : "";
+  const defaultSide = ed ? (ed.side || "links") : (last ? last.side : "links");
+  const timeVal = ed ? ed.time : nowTimeStr();
+  const leftVal = ed && ed.left != null ? ed.left : "";
+  const rightVal = ed && ed.right != null ? ed.right : "";
+  const amountVal = ed && ed.amount != null ? ed.amount : "";
+  const noteVal = ed && ed.note ? escapeHtml(ed.note) : "";
   return `
   <div class="modal-overlay" data-action="close-modal">
     <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-head"><div class="modal-title">Voeding toevoegen</div>
+      <div class="modal-head"><div class="modal-title">Voeding ${ed ? "bewerken" : "toevoegen"}</div>
         <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
-      <div class="field"><label>Tijdstip</label><input type="time" id="f-time" value="${nowTimeStr()}"></div>
+      <div class="field"><label>Begin voeding</label><input type="time" id="f-time" value="${timeVal}"></div>
       <div class="field"><label>Type</label>
         <div class="seg">
-          <button type="button" class="on" style="background:var(--feed)" data-action="seg" data-group="f-type" data-value="borst">Borstvoeding</button>
-          <button type="button" data-action="seg" data-group="f-type" data-value="fles">Flesvoeding</button>
+          <button type="button" class="${type==='borst'?'on':''}" style="${type==='borst'?'background:var(--feed)':''}" data-action="seg" data-group="f-type" data-value="borst">Borstvoeding</button>
+          <button type="button" class="${type==='fles'?'on':''}" style="${type==='fles'?'background:var(--feed)':''}" data-action="seg" data-group="f-type" data-value="fles">Flesvoeding</button>
         </div>
-        <input type="hidden" id="f-type" value="borst">
+        <input type="hidden" id="f-type" value="${type}">
       </div>
-      <div id="f-borst-fields">
+      <div id="f-borst-fields" style="display:${type==='borst'?'':'none'}">
         ${lastHint ? `<div class="chart-sub" style="margin-top:-4px">${lastHint}</div>` : ""}
-        <div class="field"><label>Links (minuten)</label><input type="number" min="0" id="f-left" placeholder="bv. 10"></div>
-        <div class="field"><label>Rechts (minuten)</label><input type="number" min="0" id="f-right" placeholder="bv. 5"></div>
+        <div class="field"><label>Links (minuten)</label><input type="number" min="0" id="f-left" placeholder="bv. 10" value="${leftVal}"></div>
+        <div class="field"><label>Rechts (minuten)</label><input type="number" min="0" id="f-right" placeholder="bv. 5" value="${rightVal}"></div>
         <div class="field"><label>Laatste kant</label>
           <div class="seg">
             <button type="button" class="${defaultSide==='links'?'on':''}" style="${defaultSide==='links'?'background:var(--feed)':''}" data-action="seg" data-group="f-side" data-value="links">Links</button>
@@ -935,30 +1332,88 @@ function feedingModal() {
           <input type="hidden" id="f-side" value="${defaultSide}">
         </div>
       </div>
-      <div id="f-fles-fields" style="display:none">
-        <div class="field"><label>Hoeveelheid (ml)</label><input type="number" min="0" id="f-amount" placeholder="bv. 120"></div>
+      <div id="f-fles-fields" style="display:${type==='fles'?'':'none'}">
+        <div class="field"><label>Hoeveelheid (ml)</label><input type="number" min="0" id="f-amount" placeholder="bv. 120" value="${amountVal}"></div>
       </div>
-      <div class="field"><label>Notitie (optioneel)</label><textarea id="f-note" placeholder="bv. dronk traag"></textarea></div>
-      <button class="submit-btn" style="background:var(--feed)" data-action="save-feeding">Voeding opslaan</button>
+      <div class="field"><label>Notitie (optioneel)</label><textarea id="f-note" placeholder="bv. dronk traag">${noteVal}</textarea></div>
+      <button class="submit-btn" style="background:var(--feed)" data-action="save-feeding">Voeding ${ed ? "bijwerken" : "opslaan"}</button>
     </div>
   </div>`;
 }
 function diaperModal() {
+  const ed = state.editEntry;
+  const type = ed ? ed.type : "plas";
+  const timeVal = ed ? ed.time : nowTimeStr();
+  const opts = [["plas","Pipi"],["poep","Kaka"],["beide","Pipi + kaka"]];
   return `
   <div class="modal-overlay" data-action="close-modal">
     <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-head"><div class="modal-title">Luier toevoegen</div>
+      <div class="modal-head"><div class="modal-title">Luier ${ed ? "bewerken" : "toevoegen"}</div>
         <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
-      <div class="field"><label>Tijdstip</label><input type="time" id="d-time" value="${nowTimeStr()}"></div>
+      <div class="field"><label>Tijdstip</label><input type="time" id="d-time" value="${timeVal}"></div>
       <div class="field"><label>Type</label>
         <div class="seg">
-          <button type="button" class="on" style="background:var(--diaper)" data-action="seg" data-group="d-type" data-value="plas">Pipi</button>
-          <button type="button" data-action="seg" data-group="d-type" data-value="poep">Kaka</button>
-          <button type="button" data-action="seg" data-group="d-type" data-value="beide">Pipi + kaka</button>
+          ${opts.map(([v,l])=>`<button type="button" class="${type===v?'on':''}" style="${type===v?'background:var(--diaper)':''}" data-action="seg" data-group="d-type" data-value="${v}">${l}</button>`).join("")}
         </div>
-        <input type="hidden" id="d-type" value="plas">
+        <input type="hidden" id="d-type" value="${type}">
       </div>
-      <button class="submit-btn" style="background:var(--diaper)" data-action="save-diaper">Luier opslaan</button>
+      <button class="submit-btn" style="background:var(--diaper)" data-action="save-diaper">Luier ${ed ? "bijwerken" : "opslaan"}</button>
+    </div>
+  </div>`;
+}
+function instellingenModal() {
+  const current = getAppName();
+  const birth = getBirthDate() || "";
+  return `
+  <div class="modal-overlay" data-action="close-modal">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-head"><div class="modal-title">Instellingen</div>
+        <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
+      <div class="field"><label>Naam van de app</label>
+        <input type="text" id="app-name-input" value="${escapeHtml(current)}" placeholder="${escapeHtml(DEFAULT_APP_NAME)}" maxlength="40" autocomplete="off"></div>
+      <div class="field"><label>Geboortedatum</label>
+        <input type="date" id="birth-input" value="${birth}" max="${todayStr()}"></div>
+      ${birth ? `<div class="sync-note" style="margin-top:-4px">Leeftijd: <strong>${ageText(birth)}</strong></div>` : `<div class="sync-note" style="margin-top:-4px">Vul de geboortedatum in om de leeftijd bovenaan te tonen.</div>`}
+      <button class="submit-btn" style="background:var(--feed)" data-action="save-instellingen">Opslaan</button>
+    </div>
+  </div>`;
+}
+function reminderModal() {
+  const cfg = getReminderCfg();
+  const presets = [60, 90, 120, 150, 180, 210, 240];
+  const permState = typeof Notification === "undefined" ? "unsupported" : Notification.permission;
+  const hours = Math.floor(cfg.intervalMin / 60), mins = cfg.intervalMin % 60;
+  return `
+  <div class="modal-overlay" data-action="close-modal">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-head"><div class="modal-title">Voedingsherinnering</div>
+        <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
+
+      <div class="field"><label>Herinnering</label>
+        <div class="seg">
+          <button type="button" class="${cfg.enabled?'on':''}" style="${cfg.enabled?'background:var(--feed)':''}" data-action="seg" data-group="r-enabled" data-value="aan">Aan</button>
+          <button type="button" class="${!cfg.enabled?'on':''}" style="${!cfg.enabled?'background:var(--feed)':''}" data-action="seg" data-group="r-enabled" data-value="uit">Uit</button>
+        </div>
+        <input type="hidden" id="r-enabled" value="${cfg.enabled?'aan':'uit'}">
+      </div>
+
+      <div class="field"><label>Interval na laatste voeding</label>
+        <div class="reminder-presets">
+          ${presets.map(p => `<button type="button" class="chip-btn ${cfg.intervalMin===p?'on':''}" data-action="reminder-preset" data-min="${p}">${fmtDuration(p)}</button>`).join("")}
+        </div>
+      </div>
+      <div class="field"><label>Of exact (uren : minuten)</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="number" min="0" max="12" id="r-hours" value="${hours}" style="flex:1"><span>u</span>
+          <input type="number" min="0" max="59" step="5" id="r-mins" value="${mins}" style="flex:1"><span>m</span>
+        </div>
+      </div>
+
+      ${permState === "denied" ? `<div class="sync-note" style="color:var(--health)">Meldingen staan geblokkeerd voor deze site. Zet ze aan via het slotje in de adresbalk (of de app-instellingen) om herinneringen te ontvangen.</div>`
+        : permState === "unsupported" ? `<div class="sync-note">Deze browser ondersteunt geen meldingen. De aftelklok in de app werkt wel.</div>`
+        : `<div class="sync-note">Voeg de app toe aan je beginscherm (Chrome-menu ⋮ → "App installeren") voor de meest betrouwbare herinneringen.</div>`}
+
+      <button class="submit-btn" style="background:var(--feed)" data-action="save-reminder">Opslaan</button>
     </div>
   </div>`;
 }
@@ -987,37 +1442,46 @@ function syncModal() {
   </div>`;
 }
 function sleepModal() {
+  const ed = state.editEntry;
+  const startVal = ed ? ed.start : nowTimeStr();
+  const endVal = ed ? ed.end : nowTimeStr();
+  const noteVal = ed && ed.note ? escapeHtml(ed.note) : "";
   return `
   <div class="modal-overlay" data-action="close-modal">
     <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-head"><div class="modal-title">Slaap toevoegen</div>
+      <div class="modal-head"><div class="modal-title">Slaap ${ed ? "bewerken" : "toevoegen"}</div>
         <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
-      <div class="field"><label>Van</label><input type="time" id="s-start" value="${nowTimeStr()}"></div>
-      <div class="field"><label>Tot</label><input type="time" id="s-end" value="${nowTimeStr()}"></div>
-      <div class="field"><label>Notitie (optioneel)</label><textarea id="s-note" placeholder="bv. onrustig, kort wakker"></textarea></div>
-      <button class="submit-btn" style="background:var(--sleep)" data-action="save-sleep">Slaap opslaan</button>
+      <div class="field"><label>Van</label><input type="time" id="s-start" value="${startVal}"></div>
+      <div class="field"><label>Tot</label><input type="time" id="s-end" value="${endVal}"></div>
+      <div class="field"><label>Notitie (optioneel)</label><textarea id="s-note" placeholder="bv. onrustig, kort wakker">${noteVal}</textarea></div>
+      <button class="submit-btn" style="background:var(--sleep)" data-action="save-sleep">Slaap ${ed ? "bijwerken" : "opslaan"}</button>
     </div>
   </div>`;
 }
 function healthModal() {
+  const ed = state.editEntry;
+  const type = ed ? ed.type : "temperatuur";
+  const timeVal = ed ? ed.time : nowTimeStr();
+  const valueVal = ed && ed.value != null ? escapeHtml(String(ed.value)) : "";
+  const noteVal = ed && ed.note ? escapeHtml(ed.note) : "";
+  const opts = [["temperatuur","Temperatuur"],["gedrag","Gedrag"],["anders","Anders"]];
+  const valLabel = type === "temperatuur" ? "Temperatuur (°C)" : type === "gedrag" ? "Beschrijving" : "Waarde";
   return `
   <div class="modal-overlay" data-action="close-modal">
     <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-head"><div class="modal-title">Meting toevoegen</div>
+      <div class="modal-head"><div class="modal-title">Meting ${ed ? "bewerken" : "toevoegen"}</div>
         <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
-      <div class="field"><label>Tijdstip</label><input type="time" id="h-time" value="${nowTimeStr()}"></div>
+      <div class="field"><label>Tijdstip</label><input type="time" id="h-time" value="${timeVal}"></div>
       <div class="field"><label>Type</label>
         <div class="seg">
-          <button type="button" class="on" style="background:var(--health)" data-action="seg" data-group="h-type" data-value="temperatuur">Temperatuur</button>
-          <button type="button" data-action="seg" data-group="h-type" data-value="gedrag">Gedrag</button>
-          <button type="button" data-action="seg" data-group="h-type" data-value="anders">Anders</button>
+          ${opts.map(([v,l])=>`<button type="button" class="${type===v?'on':''}" style="${type===v?'background:var(--health)':''}" data-action="seg" data-group="h-type" data-value="${v}">${l}</button>`).join("")}
         </div>
-        <input type="hidden" id="h-type" value="temperatuur">
+        <input type="hidden" id="h-type" value="${type}">
       </div>
-      <div class="field"><label id="h-value-label">Temperatuur (°C)</label>
-        <input type="number" step="0.1" id="h-value" placeholder="bv. 37.2"></div>
-      <div class="field"><label>Notitie (optioneel)</label><textarea id="h-note"></textarea></div>
-      <button class="submit-btn" style="background:var(--health)" data-action="save-health">Meting opslaan</button>
+      <div class="field"><label id="h-value-label">${valLabel}</label>
+        <input type="${type==='temperatuur'?'number':'text'}" step="0.1" id="h-value" placeholder="bv. 37.2" value="${valueVal}"></div>
+      <div class="field"><label>Notitie (optioneel)</label><textarea id="h-note">${noteVal}</textarea></div>
+      <button class="submit-btn" style="background:var(--health)" data-action="save-health">Meting ${ed ? "bijwerken" : "opslaan"}</button>
     </div>
   </div>`;
 }
@@ -1060,7 +1524,12 @@ function onAction(ev) {
     state.modal = null; render();
     if (SYNC.enabled) {
       setStatus("syncing");
-      uploadAllLocal().then(() => syncCurrentView()).catch(() => setStatus("offline"));
+      reconcileAppName()
+        .then(() => reconcileBirthDate())
+        .then(() => reconcileAppointments())
+        .then(() => uploadAllLocal())
+        .then(() => syncCurrentView())
+        .catch(() => setStatus("offline"));
     }
   }
   else if (action === "sync-disconnect") {
@@ -1069,14 +1538,84 @@ function onAction(ev) {
     setStatus("off"); state.modal = null; render();
   }
   else if (action === "sync-resync") { syncCurrentView(); }
-  else if (action === "open-modal") { state.modal = el.dataset.modal; render(); }
-  else if (action === "close-modal") { state.modal = null; render(); }
+  else if (action === "open-modal") { state.editEntry = null; state.editAppt = null; state.modal = el.dataset.modal; render(); }
+  else if (action === "close-modal") { state.editEntry = null; state.editAppt = null; state.modal = null; render(); }
+  else if (action === "edit-entry") {
+    const kind = el.dataset.kind, id = el.dataset.id;
+    const day = getDay(state.selectedDate);
+    const entry = (day[kind] || []).find(e => e.id === id);
+    if (!entry) return;
+    state.editEntry = { ...entry, kind };
+    state.modal = kind === "feedings" ? "voeding" : kind === "diapers" ? "luier" : kind === "sleeps" ? "slaap" : "meting";
+    render();
+  }
   else if (action === "delete-entry") {
     const day = getDay(state.selectedDate);
     day[el.dataset.kind] = day[el.dataset.kind].filter(e => e.id !== el.dataset.id);
     persistDay(state.selectedDate);
     queueDelete(el.dataset.id);
     render();
+  }
+  else if (action === "edit-appt") {
+    const a = state.appointments.find(x => x.id === el.dataset.id);
+    if (!a) return;
+    state.editAppt = { ...a };
+    state.modal = "afspraak";
+    render();
+  }
+  else if (action === "delete-appt") {
+    state.appointments = state.appointments.filter(a => a.id !== el.dataset.id);
+    saveAppointments(state.appointments);
+    queueDelete(el.dataset.id);
+    render();
+  }
+  else if (action === "save-afspraak") {
+    const ed = state.editAppt;
+    const title = document.getElementById("a-title").value.trim();
+    const date = document.getElementById("a-date").value || todayStr();
+    const time = document.getElementById("a-time").value || "";
+    const note = document.getElementById("a-note").value.trim();
+    if (!title) { document.getElementById("a-title").focus(); return; }
+    const appt = { id: ed ? ed.id : uid(), title, date, time, note };
+    if (ed) {
+      const i = state.appointments.findIndex(a => a.id === ed.id);
+      if (i >= 0) state.appointments[i] = appt; else state.appointments.push(appt);
+    } else {
+      state.appointments.push(appt);
+    }
+    saveAppointments(state.appointments);
+    queueAppointment(appt);
+    state.editAppt = null; state.modal = null; render();
+  }
+  else if (action === "reminder-preset") {
+    const min = Number(el.dataset.min) || 180;
+    document.getElementById("r-hours").value = Math.floor(min / 60);
+    document.getElementById("r-mins").value = min % 60;
+    el.parentElement.querySelectorAll(".chip-btn").forEach(b => b.classList.remove("on"));
+    el.classList.add("on");
+  }
+  else if (action === "save-reminder") {
+    const enabled = document.getElementById("r-enabled").value === "aan";
+    const h = Math.max(0, Number(document.getElementById("r-hours").value) || 0);
+    const m = Math.max(0, Number(document.getElementById("r-mins").value) || 0);
+    let intervalMin = h * 60 + m;
+    if (intervalMin < 5) intervalMin = 5; // ondergrens
+    setReminderCfg({ enabled, intervalMin });
+    if (enabled && typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission().then(() => { scheduleReminder(); render(); });
+    }
+    lastNotifiedFor = null;
+    state.modal = null; render(); scheduleReminder();
+  }
+  else if (action === "save-instellingen") {
+    const newName = document.getElementById("app-name-input").value;
+    setAppName(newName);
+    applyAppName();
+    queueAppName(getAppName());
+    const birth = document.getElementById("birth-input").value;
+    setBirthDate(birth);
+    queueBirthDate(getBirthDate() || "");
+    state.modal = null; render();
   }
   else if (action === "seg") {
     const group = el.dataset.group, value = el.dataset.value;
@@ -1089,7 +1628,7 @@ function onAction(ev) {
       group === "f-type" ? "--feed" : group === "d-type" ? "--diaper" : "--health"
     ) || el.style.background;
     // keep original inline color var reference instead (simpler + correct):
-    el.style.background = (group === "f-type" || group === "f-side") ? "var(--feed)" : group === "d-type" ? "var(--diaper)" : "var(--health)";
+    el.style.background = (group === "f-type" || group === "f-side" || group === "r-enabled") ? "var(--feed)" : group === "d-type" ? "var(--diaper)" : "var(--health)";
     if (group === "f-type") {
       const borstFields = document.getElementById("f-borst-fields");
       const flesFields = document.getElementById("f-fles-fields");
@@ -1111,13 +1650,14 @@ function onAction(ev) {
     }
   }
   else if (action === "save-feeding") {
+    const ed = state.editEntry;
     const type = document.getElementById("f-type").value;
     const time = document.getElementById("f-time").value || nowTimeStr();
     let entry;
     if (type === "borst") {
       const side = document.getElementById("f-side").value;
       entry = {
-        id: uid(), time, type,
+        id: ed ? ed.id : uid(), time, type,
         left: Number(document.getElementById("f-left").value) || 0,
         right: Number(document.getElementById("f-right").value) || 0,
         side,
@@ -1126,56 +1666,167 @@ function onAction(ev) {
       setLastBreastSide(side, time, state.selectedDate);
     } else {
       entry = {
-        id: uid(), time, type,
+        id: ed ? ed.id : uid(), time, type,
         amount: Number(document.getElementById("f-amount").value) || 0,
         note: document.getElementById("f-note").value.trim(),
       };
     }
     const day = getDay(state.selectedDate);
-    day.feedings.push(entry);
+    if (ed) {
+      const i = day.feedings.findIndex(e => e.id === ed.id);
+      if (i >= 0) day.feedings[i] = entry; else day.feedings.push(entry);
+    } else {
+      day.feedings.push(entry);
+    }
     persistDay(state.selectedDate, { kind: "feedings", entry });
-    state.modal = null; render();
+    lastNotifiedFor = null;
+    state.editEntry = null; state.modal = null; render(); scheduleReminder();
   }
   else if (action === "save-diaper") {
+    const ed = state.editEntry;
     const entry = {
-      id: uid(),
+      id: ed ? ed.id : uid(),
       time: document.getElementById("d-time").value || nowTimeStr(),
       type: document.getElementById("d-type").value,
     };
     const day = getDay(state.selectedDate);
-    day.diapers.push(entry);
+    if (ed) {
+      const i = day.diapers.findIndex(e => e.id === ed.id);
+      if (i >= 0) day.diapers[i] = entry; else day.diapers.push(entry);
+    } else {
+      day.diapers.push(entry);
+    }
     persistDay(state.selectedDate, { kind: "diapers", entry });
-    state.modal = null; render();
+    state.editEntry = null; state.modal = null; render();
   }
   else if (action === "save-sleep") {
+    const ed = state.editEntry;
     const entry = {
-      id: uid(),
+      id: ed ? ed.id : uid(),
       start: document.getElementById("s-start").value || nowTimeStr(),
       end: document.getElementById("s-end").value || nowTimeStr(),
       note: document.getElementById("s-note").value.trim(),
     };
     const day = getDay(state.selectedDate);
-    day.sleeps.push(entry);
+    if (ed) {
+      const i = day.sleeps.findIndex(e => e.id === ed.id);
+      if (i >= 0) day.sleeps[i] = entry; else day.sleeps.push(entry);
+    } else {
+      day.sleeps.push(entry);
+    }
     persistDay(state.selectedDate, { kind: "sleeps", entry });
-    state.modal = null; render();
+    state.editEntry = null; state.modal = null; render();
   }
   else if (action === "save-health") {
+    const ed = state.editEntry;
     const entry = {
-      id: uid(),
+      id: ed ? ed.id : uid(),
       time: document.getElementById("h-time").value || nowTimeStr(),
       type: document.getElementById("h-type").value,
       value: document.getElementById("h-value").value.trim(),
       note: document.getElementById("h-note").value.trim(),
     };
     const day = getDay(state.selectedDate);
-    day.health.push(entry);
+    if (ed) {
+      const i = day.health.findIndex(e => e.id === ed.id);
+      if (i >= 0) day.health[i] = entry; else day.health.push(entry);
+    } else {
+      day.health.push(entry);
+    }
     persistDay(state.selectedDate, { kind: "health", entry });
-    state.modal = null; render();
+    state.editEntry = null; state.modal = null; render();
   }
 }
 
+// ---------------- herinnering-scheduler ----------------
+let reminderTimer = null;
+let lastNotifiedFor = null; // tijdstip (ms) waarvoor al een melding is getoond
+
+function nextReminderTime() {
+  const cfg = getReminderCfg();
+  if (!cfg.enabled) return null;
+  const last = lastFeedingDateTime();
+  if (!last) return null;
+  return last.dt.getTime() + cfg.intervalMin * 60000;
+}
+
+function scheduleReminder() {
+  if (reminderTimer) { clearTimeout(reminderTimer); reminderTimer = null; }
+  const cfg = getReminderCfg();
+  if (!cfg.enabled) return;
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  const target = nextReminderTime();
+  if (!target) return;
+  const delay = target - Date.now();
+  if (delay <= 0) {
+    fireReminder(target);
+  } else {
+    // setTimeout kapt af rond ~24 dagen; onze intervallen zijn klein genoeg
+    reminderTimer = setTimeout(() => fireReminder(target), delay);
+  }
+}
+
+function fireReminder(target) {
+  if (lastNotifiedFor === target) return; // niet dubbel melden voor dezelfde voeding
+  lastNotifiedFor = target;
+  try {
+    new Notification(getAppName(), {
+      body: reminderMessage(),
+      tag: "osjes-voeding",
+      renotify: true,
+    });
+  } catch (e) { /* melding niet mogelijk */ }
+}
+
+// Elke minuut de countdown verversen en de planning herzien (bv. na nieuwe voeding
+// of na terugkeren uit de achtergrond).
+setInterval(() => {
+  if (state.activeTab === "dag" && !state.modal) render();
+  scheduleReminder();
+}, 60000);
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    scheduleReminder();
+    if (state.activeTab === "dag" && !state.modal) render();
+  }
+});
+
+// ---------------- PWA manifest + documenttitel (naam is instelbaar) ----------------
+let _manifestUrl = null;
+function applyAppName() {
+  const name = getAppName();
+  // Documenttitel bijwerken
+  document.title = `${name} — voeding & luiers bijhouden`;
+  const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+  if (appleTitle) appleTitle.content = name;
+  // Manifest (opnieuw) genereren via Blob
+  const icon = (size) => "data:image/svg+xml," + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}"><rect width="${size}" height="${size}" rx="${Math.round(size*0.22)}" fill="#7C9473"/><text x="50%" y="66%" font-size="${Math.round(size*0.5)}" text-anchor="middle" fill="white" font-family="sans-serif">🍼</text></svg>`
+  );
+  const manifest = {
+    name, short_name: name, start_url: ".", display: "standalone",
+    background_color: "#F1EEE2", theme_color: "#7C9473",
+    icons: [
+      { src: icon(192), sizes: "192x192", type: "image/svg+xml" },
+      { src: icon(512), sizes: "512x512", type: "image/svg+xml" },
+    ],
+  };
+  try {
+    if (_manifestUrl) URL.revokeObjectURL(_manifestUrl);
+    const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+    _manifestUrl = URL.createObjectURL(blob);
+    let link = document.querySelector('link[rel="manifest"]');
+    if (!link) { link = document.createElement("link"); link.rel = "manifest"; document.head.appendChild(link); }
+    link.href = _manifestUrl;
+  } catch (e) { /* manifest optioneel */ }
+}
+
+applyAppName();
+state.appointments = loadAppointments();
 initSync();
 render();
+scheduleReminder();
 if (SYNC.enabled) {
   syncCurrentView();
   setInterval(() => { if (!state.modal) syncCurrentView(); }, 20000);
