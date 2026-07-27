@@ -74,6 +74,8 @@
     background: var(--surface); display: flex; align-items: center; justify-content: center;
     cursor: pointer; color: var(--ink); flex-shrink: 0; }
   .nav-btn:hover { background: var(--surface-soft); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn:disabled:hover { background: var(--surface); }
   .date-label, .week-label { font-family: 'Fraunces', serif; font-size: 18px; text-transform: capitalize; flex: 1; }
   .week-label { font-size: 17px; }
   .today-btn { font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: var(--feed);
@@ -106,7 +108,7 @@
     font-size: 12px; color: var(--ink-soft); text-align: right; }
   .hgrid-row.now .hgrid-hour { color: var(--ink); font-weight: 700; }
   .hgrid-cells { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
-    align-content: center; border-radius: 12px; padding: 4px 6px; min-width: 0; }
+    align-content: center; border-radius: 12px; padding: 8px 6px; min-width: 0; }
   .hgrid-row.sleeping .hgrid-cells { background: var(--sleep-soft); }
   .hgrid-row.now .hgrid-cells { outline: 2px solid var(--ink); outline-offset: -2px; }
   .hgrid-sleeptag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px;
@@ -115,7 +117,13 @@
     border-radius: 999px; padding: 5px 11px 5px 8px; cursor: pointer; font-family: 'Figtree', sans-serif; }
   .hgrid-ev:hover { filter: brightness(0.97); }
   .hgrid-ev:active { transform: scale(0.97); }
-  .hgrid-ev-ic { font-size: 13px; line-height: 1; }
+  .hgrid-ev.last-feed { border-width: 2px; font-weight: 700;
+    box-shadow: 0 0 0 3px var(--feed-soft); position: relative; }
+  .hgrid-ev.last-feed::after { content: "laatste"; position: absolute; top: -8px; right: -4px;
+    background: var(--feed); color: var(--surface); font-size: 8.5px; font-weight: 700;
+    padding: 1px 6px; border-radius: 999px; letter-spacing: 0.03em; }
+  .hgrid-ev-ic { font-size: 13px; line-height: 1; display: inline-flex; align-items: center; }
+  .hgrid-ev-ic svg { width: 15px; height: 15px; display: block; }
   .hgrid-ev-time { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: var(--ink); }
 
   @keyframes entryFlash {
@@ -123,6 +131,18 @@
     100% { background: transparent; }
   }
   .entry-flash { animation: entryFlash 1.6s ease-out; border-radius: 12px; }
+
+  .sum-totals { background: var(--surface-soft); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 14px; }
+  .sum-tot { font-size: 13px; color: var(--ink-soft); margin: 2px 0; }
+  .sum-tot span { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 600; color: var(--ink); }
+  .sum-list { max-height: 46vh; overflow-y: auto; }
+  .sum-row { display: flex; align-items: center; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--line); }
+  .sum-row:last-child { border-bottom: none; }
+  .sum-time { font-size: 12.5px; color: var(--ink-soft); flex-shrink: 0; width: 78px; }
+  .sum-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .sum-text { font-size: 13.5px; }
+  .sum-empty { font-size: 13px; color: var(--ink-soft); font-style: italic; padding: 8px 2px; }
 
   .quick-add { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 20px; }
   .quick-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 18px;
@@ -136,7 +156,10 @@
 
   .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
   .stat-chip { background: var(--surface-soft); border: 1px solid var(--line); border-radius: 16px;
-    padding: 9px 16px; font-size: 13px; display: flex; align-items: baseline; gap: 6px; }
+    padding: 9px 16px; font-size: 13px; display: flex; align-items: baseline; gap: 6px;
+    cursor: pointer; font-family: 'Figtree', sans-serif; color: var(--ink); }
+  .stat-chip:hover { background: var(--surface); border-color: var(--ink-soft); }
+  .stat-chip:active { transform: scale(0.97); }
   .stat-chip .num { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; }
   .stat-chip .lbl { color: var(--ink-soft); }
 
@@ -201,6 +224,8 @@
   .seg button.on { color: var(--surface); border-color: transparent; }
   .submit-btn { width: 100%; border: none; padding: 13px; border-radius: 16px; font-weight: 700;
     font-size: 14px; cursor: pointer; color: var(--surface); margin-top: 4px; font-family: 'Figtree', sans-serif; }
+  .modal-error { background: var(--health-soft); color: var(--health); border: 1px solid var(--health);
+    border-radius: 12px; padding: 10px 14px; font-size: 13px; font-weight: 600; margin-bottom: 12px; }
 
   .week-summary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 18px; }
   .summary-card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
@@ -208,6 +233,8 @@
   .summary-card .num { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; }
   .summary-card .lbl { font-size: 11px; color: var(--ink-soft); text-transform: uppercase;
     letter-spacing: 0.05em; margin-top: 2px; }
+  .summary-card .sub { font-size: 11px; color: var(--ink-soft); margin-top: 5px;
+    padding-top: 5px; border-top: 1px solid var(--line); }
 
   .legend { display: flex; gap: 16px; font-size: 12px; color: var(--ink-soft); margin-top: 8px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -258,13 +285,19 @@
   .report-btn-primary { background: var(--ink) !important; color: var(--surface) !important; border-color: transparent !important; }
 
   @media print {
-    @page { margin: 15mm; }
-    body { background: #fff; }
-    .top .tagline, .tabs, .report-controls, .report-actions, .storage-note { display: none !important; }
+    @page { margin: 14mm; }
+    html, body { background: #fff !important; }
+    .sync-btn, .tabs, .date-nav, .week-nav, .report-controls, .report-actions,
+    .storage-note, .quick-add, .stats-row, .reminder-card, .ribbon-title, .hgrid { display: none !important; }
+    .top .tagline { display: block !important; }
     .shell { max-width: none; padding: 0; }
-    .card { border: 1px solid #ccc; border-radius: 8px; box-shadow: none; break-inside: avoid; page-break-inside: avoid; }
+    .card { border: 1px solid #ccc; border-radius: 8px; box-shadow: none;
+      break-inside: avoid; page-break-inside: avoid; margin-bottom: 10px; }
     .rep-block { break-inside: avoid; }
     .brand { font-size: 22px; }
+    .report-table { font-size: 11px; }
+    .report-table-wrap { overflow: visible !important; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 
   @media (max-width: 420px) {
@@ -294,6 +327,26 @@ const pad = n => String(n).padStart(2, "0");
 const dateToStr = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const todayStr = () => dateToStr(new Date());
 const nowTimeStr = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+// true als (dateStr, timeStr) in de toekomst ligt t.o.v. nu
+function isFuture(dateStr, timeStr) {
+  if (dateStr > todayStr()) return true;
+  if (dateStr === todayStr() && timeStr && timeToMinutes(timeStr) > timeToMinutes(nowTimeStr())) return true;
+  return false;
+}
+// Toont een foutmelding binnen de open modal (werkt ook waar alert() geblokkeerd is, bv. PWA)
+function showModalError(msg) {
+  const modal = document.querySelector(".modal");
+  if (!modal) { try { alert(msg); } catch (e) {} return; }
+  let box = modal.querySelector(".modal-error");
+  if (!box) {
+    box = document.createElement("div");
+    box.className = "modal-error";
+    const btn = modal.querySelector(".submit-btn");
+    if (btn) modal.insertBefore(box, btn); else modal.appendChild(box);
+  }
+  box.textContent = msg;
+  box.scrollIntoView({ block: "nearest" });
+}
 function addDays(dateStr, n) {
   const [y,m,d] = dateStr.split("-").map(Number);
   const dt = new Date(y, m-1, d); dt.setDate(dt.getDate()+n);
@@ -358,21 +411,25 @@ function longDate(dateStr) {
 function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
 
 function aggregate(dates) {
-  const totals = { feedings:0, ml:0, borst:0, fles:0, borstMin:0, plas:0, poep:0, luiers:0, slaapMin:0, temps:[] };
+  const totals = { feedings:0, ml:0, borst:0, fles:0, borstMin:0, borstL:0, borstR:0, plas:0, poep:0, luiers:0, slaapMin:0, temps:[] };
   const perDay = dates.map(date => {
     const day = getDay(date);
     const ml = day.feedings.filter(f=>f.type==="fles").reduce((s,f)=>s+(Number(f.amount)||0),0);
     const borst = day.feedings.filter(f=>f.type==="borst").length;
     const fles = day.feedings.filter(f=>f.type==="fles").length;
-    const borstMin = day.feedings.filter(f=>f.type==="borst").reduce((s,f)=>s+(Number(f.left)||0)+(Number(f.right)||0),0);
+    const borstFeeds = day.feedings.filter(f=>f.type==="borst");
+    const borstL = borstFeeds.reduce((s,f)=>s+(Number(f.left)||0),0);
+    const borstR = borstFeeds.reduce((s,f)=>s+(Number(f.right)||0),0);
+    const borstMin = borstL + borstR;
     const plas = day.diapers.filter(x=>x.type==="plas"||x.type==="beide").length;
     const poep = day.diapers.filter(x=>x.type==="poep"||x.type==="beide").length;
     const slaapMin = day.sleeps.reduce((s,x)=>s+sleepMinutes(x),0);
     const temps = day.health.filter(h=>h.type==="temperatuur"&&h.value!=="").map(h=>Number(h.value)).filter(v=>!isNaN(v));
-    totals.feedings += day.feedings.length; totals.ml += ml; totals.borst += borst; totals.fles += fles; totals.borstMin += borstMin;
+    totals.feedings += day.feedings.length; totals.ml += ml; totals.borst += borst; totals.fles += fles;
+    totals.borstMin += borstMin; totals.borstL += borstL; totals.borstR += borstR;
     totals.plas += plas; totals.poep += poep; totals.luiers += day.diapers.length; totals.slaapMin += slaapMin;
     totals.temps = totals.temps.concat(temps);
-    return { date, feedings: day.feedings.length, ml, borst, fles, borstMin, plas, poep, luiers: day.diapers.length, slaapMin, temps };
+    return { date, feedings: day.feedings.length, ml, borst, fles, borstMin, borstL, borstR, plas, poep, luiers: day.diapers.length, slaapMin, temps };
   });
   return { perDay, ...totals };
 }
@@ -380,19 +437,20 @@ function aggregate(dates) {
 function exportReportCsv() {
   const { from, to } = state.report;
   const agg = aggregate(datesBetween(from, to));
-  const head = ["Datum","Voedingen","ml (fles)","Borstvoedingen","Borst minuten","Flesvoedingen","Luiers","Pipi","Kaka","Slaap (min)","Temp gemiddeld","Temp metingen"];
+  const head = ["Datum","Voedingen","ml (fles)","Borstvoedingen","Borst minuten","Borst links (min)","Borst rechts (min)","Flesvoedingen","Luiers","Pipi","Kaka","Slaap (min)","Temp gemiddeld","Temp metingen"];
   const rows = [head];
   agg.perDay.forEach(d => {
     const t = d.temps.length ? avg(d.temps).toFixed(1) : "";
-    rows.push([d.date, d.feedings, d.ml, d.borst, d.borstMin, d.fles, d.luiers, d.plas, d.poep, d.slaapMin, t, d.temps.length]);
+    rows.push([d.date, d.feedings, d.ml, d.borst, d.borstMin, d.borstL, d.borstR, d.fles, d.luiers, d.plas, d.poep, d.slaapMin, t, d.temps.length]);
   });
   const tAll = agg.temps.length ? avg(agg.temps).toFixed(1) : "";
-  rows.push(["TOTAAL", agg.feedings, agg.ml, agg.borst, agg.borstMin, agg.fles, agg.luiers, agg.plas, agg.poep, agg.slaapMin, tAll, agg.temps.length]);
+  rows.push(["TOTAAL", agg.feedings, agg.ml, agg.borst, agg.borstMin, agg.borstL, agg.borstR, agg.fles, agg.luiers, agg.plas, agg.poep, agg.slaapMin, tAll, agg.temps.length]);
   const csv = "\uFEFF" + rows.map(r => r.join(";")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
+  const slug = getAppName().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "baby-dagboek";
   const a = document.createElement("a");
-  a.href = url; a.download = `osjes-dagboek_${from}_tot_${to}.csv`;
+  a.href = url; a.download = `${slug}_${from}_tot_${to}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 200);
 }
@@ -776,6 +834,7 @@ const ICON = {
   bottle: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v2.5L8.5 7A2 2 0 0 0 8 8.3V19a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8.3A2 2 0 0 0 15.5 7L14 5.5V3"/><path d="M8 11h8"/><path d="M8 14h4"/></svg>`,
   breast: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a8 8 0 0 1 16 0c0 5-3.6 9-8 9S4 14 4 9Z"/><circle cx="12" cy="10" r="1.6"/></svg>`,
   circle: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>`,
+  diaper: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v3a11 11 0 0 1-9 10.8A11 11 0 0 1 3 9V6Z"/><path d="M3 8c3 1.2 5.4 1.8 9 1.8S18 9.2 21 8"/></svg>`,
   thermo: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.5a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>`,
   chevronLeft: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
   chevronRight: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`,
@@ -796,7 +855,7 @@ function kindSoft(kind) { return kind === "feedings" ? "var(--feed-soft)" : kind
 function kindIcon(e) {
   const kind = e.kind || e;
   if (kind === "feedings") return (e.type === "borst") ? ICON.breast : ICON.bottle;
-  if (kind === "diapers") return ICON.circle;
+  if (kind === "diapers") return ICON.diaper;
   if (kind === "sleeps") return ICON.moon;
   return ICON.thermo;
 }
@@ -804,8 +863,9 @@ function kindIconSmall(e) {
   // compacte glyphs voor het dagritme-rooster
   const kind = e.kind || e;
   if (kind === "feedings") return (e.type === "borst") ? "🤱" : "🍼";
-  if (kind === "diapers") return "💧";
+  if (kind === "diapers") return ICON.diaper;
   if (kind === "health") return "🌡";
+  if (kind === "sleeps") return "🌙";
   return "•";
 }
 function labelFor(e) {
@@ -906,7 +966,7 @@ function renderDagView() {
       <button class="nav-btn" data-action="day-prev">${ICON.chevronLeft}</button>
       <div class="date-label">${formatDateNice(state.selectedDate)}</div>
       ${!isToday ? `<button class="today-btn" data-action="day-today">vandaag</button>` : ""}
-      <button class="nav-btn" data-action="day-next">${ICON.chevronRight}</button>
+      <button class="nav-btn" data-action="day-next" ${isToday ? "disabled" : ""}>${ICON.chevronRight}</button>
     </div>
 
     <div class="card">
@@ -915,12 +975,15 @@ function renderDagView() {
         ? `<div class="ribbon-empty">Nog niets geregistreerd voor deze dag.</div>`
         : (() => {
           const nowHour = isToday ? Math.floor(nowMinutes/60) : -1;
-          // per uur: welke slaap-sessies overlappen dit uur, en welke gebeurtenissen vallen erin
-          const sleepAtHour = (h) => day.sleeps.some(s => {
+          // id van de laatste voeding van de dag (laatste in tijd)
+          const feedsSorted = day.feedings.slice().sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
+          const lastFeedId = feedsSorted.length ? feedsSorted[feedsSorted.length-1].id : null;
+          // slaapsessie die dit uur overlapt (of null)
+          const sleepAtHour = (h) => day.sleeps.find(s => {
             const a = timeToMinutes(s.start); let b = timeToMinutes(s.end);
             if (b <= a) b = 1440;
             return a < (h+1)*60 && b > h*60;
-          });
+          }) || null;
           const evByHour = {};
           entries.filter(e => e.kind !== "sleeps").forEach(e => {
             const h = Math.floor(timeToMinutes(e.time)/60);
@@ -932,13 +995,16 @@ function renderDagView() {
           const rows = [...show].sort((a,b)=>a-b);
           return `<div class="hgrid">
             ${rows.map(h => {
-              const sleeping = sleepAtHour(h);
+              const sleep = sleepAtHour(h);
               const evs = (evByHour[h]||[]).sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
-              return `<div class="hgrid-row ${h===nowHour ? "now" : ""} ${sleeping ? "sleeping" : ""}">
+              return `<div class="hgrid-row ${h===nowHour ? "now" : ""} ${sleep ? "sleeping" : ""}">
                 <div class="hgrid-hour">${pad(h)}u</div>
                 <div class="hgrid-cells">
-                  ${sleeping && !evs.length ? `<span class="hgrid-sleeptag">${ICON.moon} slaap</span>` : ""}
-                  ${evs.map(e => `<button class="hgrid-ev" data-action="goto-entry" data-id="${e.id}" title="${escapeHtml(labelFor(e))}" style="border-color:${kindColor(e.kind)}; background:${kindSoft(e.kind)}">
+                  ${sleep ? `<button class="hgrid-ev sleep" data-action="goto-entry" data-id="${sleep.id}" title="Slaap ${sleep.start} – ${sleep.end}" style="border-color:var(--sleep); background:var(--sleep-soft)">
+                      <span class="hgrid-ev-ic" style="color:var(--sleep)">${kindIconSmall("sleeps")}</span>
+                      <span class="hgrid-ev-time">slaap</span>
+                    </button>` : ""}
+                  ${evs.map(e => `<button class="hgrid-ev ${e.id===lastFeedId ? "last-feed" : ""}" data-action="goto-entry" data-id="${e.id}" title="${e.id===lastFeedId ? "Laatste voeding · " : ""}${escapeHtml(labelFor(e))}" style="border-color:${kindColor(e.kind)}; background:${kindSoft(e.kind)}">
                       <span class="hgrid-ev-ic" style="color:${kindColor(e.kind)}">${kindIconSmall(e)}</span>
                       <span class="hgrid-ev-time">${e.time}</span>
                     </button>`).join("")}
@@ -950,11 +1016,11 @@ function renderDagView() {
     </div>
 
     <div class="stats-row">
-      <div class="stat-chip"><span class="num mono">${day.feedings.length}</span><span class="lbl">voeding${day.feedings.length === 1 ? "" : "en"}</span></div>
-      <div class="stat-chip"><span class="num mono">${fmtDuration(totalBorstMin)}</span><span class="lbl">borst${lastSide ? " · laatst " + (lastSide.side === "links" ? "L" : "R") : ""}</span></div>
-      <div class="stat-chip"><span class="num mono">${totalMl}</span><span class="lbl">ml fles</span></div>
-      <div class="stat-chip"><span class="num mono">${day.diapers.length}</span><span class="lbl">luier${day.diapers.length === 1 ? "" : "s"}</span></div>
-      <div class="stat-chip"><span class="num mono">${totalSleep ? fmtDuration(totalSleep) : "0m"}</span><span class="lbl">slaap</span></div>
+      <button class="stat-chip" data-action="day-summary" data-cat="feedings"><span class="num mono">${day.feedings.length}</span><span class="lbl">voeding${day.feedings.length === 1 ? "" : "en"}</span></button>
+      <button class="stat-chip" data-action="day-summary" data-cat="feedings"><span class="num mono">${fmtDuration(totalBorstMin)}</span><span class="lbl">borst${lastSide ? " · laatst " + (lastSide.side === "links" ? "L" : "R") : ""}</span></button>
+      <button class="stat-chip" data-action="day-summary" data-cat="feedings"><span class="num mono">${totalMl}</span><span class="lbl">ml fles</span></button>
+      <button class="stat-chip" data-action="day-summary" data-cat="diapers"><span class="num mono">${day.diapers.length}</span><span class="lbl">luier${day.diapers.length === 1 ? "" : "s"}</span></button>
+      <button class="stat-chip" data-action="day-summary" data-cat="sleeps"><span class="num mono">${totalSleep ? fmtDuration(totalSleep) : "0m"}</span><span class="lbl">slaap</span></button>
     </div>
 
     ${renderReminderCard()}
@@ -1095,6 +1161,68 @@ function renderAgendaView() {
     </div>` : ""}
   `;
 }
+function samenvattingModal() {
+  const day = getDay(state.selectedDate);
+  const cat = state.summaryCat || "feedings";
+  const titel = cat === "feedings" ? "Voedingen" : cat === "diapers" ? "Luiers" : "Slaap";
+  const dagLabel = formatDateNice(state.selectedDate);
+
+  const rij = (tijd, tekst, kleur) => `
+    <div class="sum-row">
+      <span class="sum-time mono">${tijd}</span>
+      <span class="sum-dot" style="background:${kleur}"></span>
+      <span class="sum-text">${tekst}</span>
+    </div>`;
+
+  let body = "", totalen = "";
+  if (cat === "feedings") {
+    const feeds = [...day.feedings].sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
+    const borst = feeds.filter(f=>f.type==="borst");
+    const fles = feeds.filter(f=>f.type==="fles");
+    const bMin = borst.reduce((s,f)=>s+(Number(f.left)||0)+(Number(f.right)||0),0);
+    const bL = borst.reduce((s,f)=>s+(Number(f.left)||0),0);
+    const bR = borst.reduce((s,f)=>s+(Number(f.right)||0),0);
+    const ml = fles.reduce((s,f)=>s+(Number(f.amount)||0),0);
+    body = feeds.length ? feeds.map(f => {
+      const txt = f.type === "borst"
+        ? `Borst · L ${fmtDuration(Number(f.left)||0)} · R ${fmtDuration(Number(f.right)||0)}${f.side ? " · laatst " + (f.side==="links"?"L":"R") : ""}`
+        : `Fles · ${f.amount} ml`;
+      return rij(f.time, txt, "var(--feed)");
+    }).join("") : `<div class="sum-empty">Nog geen voedingen vandaag.</div>`;
+    totalen = `
+      <div class="sum-tot"><span>${feeds.length}</span> voedingen — borst ${borst.length}× · fles ${fles.length}×</div>
+      <div class="sum-tot"><span>${fmtDuration(bMin)}</span> borst totaal (L ${fmtDuration(bL)} · R ${fmtDuration(bR)})</div>
+      <div class="sum-tot"><span>${ml} ml</span> fles totaal</div>`;
+  } else if (cat === "diapers") {
+    const dp = [...day.diapers].sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
+    const plas = dp.filter(x=>x.type==="plas").length;
+    const poep = dp.filter(x=>x.type==="poep").length;
+    const beide = dp.filter(x=>x.type==="beide").length;
+    body = dp.length ? dp.map(x => rij(x.time, DIAPER_LABEL[x.type], "var(--diaper)")).join("")
+      : `<div class="sum-empty">Nog geen luiers vandaag.</div>`;
+    totalen = `
+      <div class="sum-tot"><span>${dp.length}</span> luiers</div>
+      <div class="sum-tot">pipi ${plas}× · kaka ${poep}× · pipi+kaka ${beide}×</div>`;
+  } else {
+    const sl = [...day.sleeps].sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
+    const totMin = sl.reduce((s,x)=>s+sleepMinutes(x),0);
+    body = sl.length ? sl.map(x => rij(x.start + "–" + x.end, `${fmtDuration(sleepMinutes(x))}${x.note ? " · " + escapeHtml(x.note) : ""}`, "var(--sleep)")).join("")
+      : `<div class="sum-empty">Nog geen slaap geregistreerd vandaag.</div>`;
+    totalen = `
+      <div class="sum-tot"><span>${fmtDuration(totMin)}</span> slaap totaal</div>
+      <div class="sum-tot">${sl.length} ${sl.length === 1 ? "sessie" : "sessies"}</div>`;
+  }
+
+  return `
+  <div class="modal-overlay" data-action="close-modal">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-head"><div class="modal-title">${titel} — ${dagLabel}</div>
+        <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
+      <div class="sum-totals">${totalen}</div>
+      <div class="sum-list">${body}</div>
+    </div>
+  </div>`;
+}
 function afspraakModal() {
   const ed = state.editAppt;
   const dateVal = ed ? ed.date : todayStr();
@@ -1122,15 +1250,19 @@ function renderWeekView() {
   const chartData = dates.map((d,i) => {
     const day = getDay(d);
     const totalMl = day.feedings.filter(f=>f.type==="fles").reduce((s,f)=>s+(Number(f.amount)||0),0);
-    const borstMin = day.feedings.filter(f=>f.type==="borst").reduce((s,f)=>s+(Number(f.left)||0)+(Number(f.right)||0),0);
-    const plas = day.diapers.filter(x=>x.type==="plas"||x.type==="beide").length;
-    const poep = day.diapers.filter(x=>x.type==="poep"||x.type==="beide").length;
+    const borstFeeds = day.feedings.filter(f=>f.type==="borst");
+    const borstL = borstFeeds.reduce((s,f)=>s+(Number(f.left)||0),0);
+    const borstR = borstFeeds.reduce((s,f)=>s+(Number(f.right)||0),0);
+    const borstMin = borstL + borstR;
+    const plas = day.diapers.filter(x=>x.type==="plas").length;
+    const poep = day.diapers.filter(x=>x.type==="poep").length;
+    const beide = day.diapers.filter(x=>x.type==="beide").length;
     const temps = day.health.filter(h=>h.type==="temperatuur" && h.value !== "");
     const avgTemp = temps.length ? temps.reduce((s,t)=>s+Number(t.value),0)/temps.length : null;
     const slaapMin = day.sleeps.reduce((s,x)=>s+sleepMinutes(x),0);
     return {
-      date: d, label: DAG_LABELS[i], ml: totalMl, borstMin,
-      voedingen: day.feedings.length, plas, poep, luiers: day.diapers.length,
+      date: d, label: DAG_LABELS[i], ml: totalMl, borstMin, borstL, borstR,
+      voedingen: day.feedings.length, plas, poep, beide, luiers: day.diapers.length,
       slaapMin, slaapU: Math.round(slaapMin/60*10)/10,
       temp: avgTemp !== null ? Math.round(avgTemp*10)/10 : null,
     };
@@ -1140,6 +1272,8 @@ function renderWeekView() {
   const totalFeedings = chartData.reduce((s,d)=>s+d.voedingen,0);
   const totalMlWeek = chartData.reduce((s,d)=>s+d.ml,0);
   const totalBorstMinWeek = chartData.reduce((s,d)=>s+d.borstMin,0);
+  const totalBorstLWeek = chartData.reduce((s,d)=>s+d.borstL,0);
+  const totalBorstRWeek = chartData.reduce((s,d)=>s+d.borstR,0);
   const totalDiapers = chartData.reduce((s,d)=>s+d.luiers,0);
   const totalSleepWeek = chartData.reduce((s,d)=>s+d.slaapMin,0);
   const daysWithData = chartData.filter(d=>d.voedingen>0||d.luiers>0||d.slaapMin>0).length || 1;
@@ -1154,11 +1288,11 @@ function renderWeekView() {
     </div>
 
     <div class="week-summary">
-      <div class="summary-card"><div class="num mono">${Math.round(totalFeedings/daysWithData)}</div><div class="lbl">voedingen / dag</div></div>
-      <div class="summary-card"><div class="num mono">${fmtDuration(Math.round(totalBorstMinWeek/daysWithData))}</div><div class="lbl">borst / dag</div></div>
-      <div class="summary-card"><div class="num mono">${Math.round(totalMlWeek/daysWithData)}</div><div class="lbl">ml fles / dag</div></div>
-      <div class="summary-card"><div class="num mono">${Math.round(totalDiapers/daysWithData)}</div><div class="lbl">luiers / dag</div></div>
-      <div class="summary-card"><div class="num mono">${totalSleepWeek ? fmtDuration(Math.round(totalSleepWeek/daysWithData)) : "0m"}</div><div class="lbl">slaap / dag</div></div>
+      <div class="summary-card"><div class="num mono">${totalFeedings}</div><div class="lbl">voedingen</div></div>
+      <div class="summary-card"><div class="num mono">${fmtDuration(totalBorstMinWeek)}</div><div class="lbl">borst totaal</div>${totalBorstMinWeek ? `<div class="sub">L ${fmtDuration(totalBorstLWeek)} · R ${fmtDuration(totalBorstRWeek)}</div>` : ""}</div>
+      <div class="summary-card"><div class="num mono">${totalMlWeek} ml</div><div class="lbl">fles totaal</div></div>
+      <div class="summary-card"><div class="num mono">${totalDiapers}</div><div class="lbl">luiers</div></div>
+      <div class="summary-card"><div class="num mono">${totalSleepWeek ? fmtDuration(totalSleepWeek) : "0m"}</div><div class="lbl">slaap totaal</div></div>
     </div>
 
     ${hasBorst ? `
@@ -1183,11 +1317,12 @@ function renderWeekView() {
 
     <div class="card">
       <div class="section-title">Luiers per dag</div>
-      <div class="chart-sub">Pipi en kaka, opgesplitst per dag</div>
-      ${barChart(chartData, [{key:"plas", color:"var(--diaper)"},{key:"poep", color:"var(--diaper-dark)"}], v => v)}
+      <div class="chart-sub">Pipi, kaka en gecombineerde luiers per dag</div>
+      ${barChart(chartData, [{key:"plas", color:"var(--diaper)", label:"Pipi"},{key:"poep", color:"var(--diaper-dark)", label:"Kaka"},{key:"beide", color:"var(--health)", label:"Pipi + kaka"}], v => v)}
       <div class="legend">
         <span><i style="background:var(--diaper)"></i>Pipi</span>
         <span><i style="background:var(--diaper-dark)"></i>Kaka</span>
+        <span><i style="background:var(--health)"></i>Pipi + kaka</span>
       </div>
     </div>
 
@@ -1233,7 +1368,7 @@ function renderReportView() {
         <div class="rep-block" style="border-left-color:var(--feed)">
           <div class="rep-lbl">Voeding</div>
           <div class="rep-main">${agg.feedings} voedingen · ${fmtDuration(agg.borstMin)} borst · ${agg.ml} ml fles</div>
-          <div class="rep-detail">gem. ${(agg.feedings/denom).toFixed(1)}/dag · ${fmtDuration(Math.round(agg.borstMin/denom))} borst/dag · ${Math.round(agg.ml/denom)} ml fles/dag<br>borst ${agg.borst}× · fles ${agg.fles}×</div>
+          <div class="rep-detail">gem. ${(agg.feedings/denom).toFixed(1)}/dag · ${fmtDuration(Math.round(agg.borstMin/denom))} borst/dag · ${Math.round(agg.ml/denom)} ml fles/dag<br>borst ${agg.borst}× (L ${fmtDuration(agg.borstL)} · R ${fmtDuration(agg.borstR)}) · fles ${agg.fles}×</div>
         </div>
         <div class="rep-block" style="border-left-color:var(--sleep)">
           <div class="rep-lbl">Slaap</div>
@@ -1260,12 +1395,13 @@ function renderReportView() {
       ${dates.length > 62
         ? `<div class="empty-state">Kies een kortere periode (max. ~2 maanden) voor de dagtabel. De samenvatting en CSV-export werken wel voor langere periodes.</div>`
         : `<div class="report-table-wrap"><table class="report-table">
-        <thead><tr><th>Datum</th><th>Voed.</th><th>Borst (min)</th><th>ml fles</th><th>Luiers</th><th>Pipi/kaka</th><th>Slaap</th><th>Temp</th></tr></thead>
+        <thead><tr><th>Datum</th><th>Voed.</th><th>Borst (min)</th><th>Borst L/R</th><th>ml fles</th><th>Luiers</th><th>Pipi/kaka</th><th>Slaap</th><th>Temp</th></tr></thead>
         <tbody>
           ${agg.perDay.map(d => `<tr>
             <td>${shortDate(d.date)}</td>
             <td>${d.feedings||"–"}</td>
             <td>${d.borstMin||"–"}</td>
+            <td>${d.borstMin ? d.borstL+"/"+d.borstR : "–"}</td>
             <td>${d.ml||"–"}</td>
             <td>${d.luiers||"–"}</td>
             <td>${d.plas}/${d.poep}</td>
@@ -1273,7 +1409,7 @@ function renderReportView() {
             <td>${d.temps.length ? avg(d.temps).toFixed(1)+"°" : "–"}</td>
           </tr>`).join("")}
           <tr class="total-row">
-            <td>Totaal</td><td>${agg.feedings}</td><td>${agg.borstMin}</td><td>${agg.ml}</td><td>${agg.luiers}</td>
+            <td>Totaal</td><td>${agg.feedings}</td><td>${agg.borstMin}</td><td>${agg.borstMin ? agg.borstL+"/"+agg.borstR : "–"}</td><td>${agg.ml}</td><td>${agg.luiers}</td>
             <td>${agg.plas}/${agg.poep}</td><td>${agg.slaapMin?fmtDuration(agg.slaapMin):"–"}</td>
             <td>${agg.temps.length?avg(agg.temps).toFixed(1)+"°":"–"}</td>
           </tr>
@@ -1282,20 +1418,46 @@ function renderReportView() {
     </div>
 
     <div class="report-actions">
-      <button class="report-btn-primary" data-action="report-print">${ICON.printer} Print / PDF</button>
-      <button data-action="report-csv">${ICON.download} Exporteer CSV</button>
+      <button class="report-btn-primary" data-action="report-print">${ICON.printer} Opslaan als PDF</button>
+      <button data-action="report-csv">${ICON.download} Exporteer voor Excel</button>
     </div>
   `;
 }
 
 // simple hand-rolled SVG stacked/grouped bar chart
-function barChart(data, series, fmt) {
-  const W = 640, H = 190, padL = 30, padR = 10, padT = 10, padB = 26;
+function niceMax(v) {
+  // rond het maximum af naar een net getal voor de Y-as
+  if (v <= 1) return 1;
+  const pow = Math.pow(10, Math.floor(Math.log10(v)));
+  const n = v / pow;
+  const step = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+  return step * pow;
+}
+function barChart(data, series, fmt, opts) {
+  opts = opts || {};
+  const W = 640, H = 200, padL = 46, padR = 10, padT = 12, padB = 26;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const n = data.length;
   const gap = 14;
   const bw = (innerW - gap*(n-1)) / n;
-  const maxVal = Math.max(1, ...data.map(d => series.reduce((s,ser)=>s+(d[ser.key]||0),0)));
+  const rawMax = Math.max(1, ...data.map(d => series.reduce((s,ser)=>s+(d[ser.key]||0),0)));
+  const maxVal = niceMax(rawMax);
+  // aantal segmenten: deel op hele stappen zodat labels niet dubbel afronden
+  let yTicks = 4;
+  if (maxVal <= 5) yTicks = maxVal;                    // kleine schaal: 1 per stap
+  else if (maxVal % 4 !== 0) yTicks = (maxVal % 5 === 0) ? 5 : (maxVal % 3 === 0 ? 3 : 4);
+  const axisFmt = opts.axisFmt || (v => v);
+
+  // gridlijnen + Y-as-labels
+  let grid = "";
+  for (let t = 0; t <= yTicks; t++) {
+    const f = t / yTicks;
+    const y = padT + innerH - f*innerH;
+    const val = Math.round(maxVal * f);
+    grid += `<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    grid += `<text x="${padL-6}" y="${y+3.5}" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-soft)">${escapeHtml(String(axisFmt(val)))}</text>`;
+  }
+
   let bars = "";
   data.forEach((d, i) => {
     const x = padL + i*(bw+gap);
@@ -1305,19 +1467,14 @@ function barChart(data, series, fmt) {
       const h = (val/maxVal) * innerH;
       const y = padT + innerH - yOffset - h;
       if (val > 0) {
+        const segLabel = ser.label ? ser.label + ": " : "";
         bars += `<rect x="${x}" y="${y}" width="${bw}" height="${Math.max(h,1.5)}" fill="${ser.color}" rx="3">
-          <title>${d.label} · ${escapeHtml(String(fmt(val)))}</title>
+          <title>${d.label} · ${segLabel}${escapeHtml(String(fmt(val)))}</title>
         </rect>`;
       }
       yOffset += h;
     });
     bars += `<text x="${x+bw/2}" y="${H-6}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-soft)">${d.label}</text>`;
-  });
-  // y axis guide lines (0, mid, max)
-  let grid = "";
-  [0, 0.5, 1].forEach(f => {
-    const y = padT + innerH - f*innerH;
-    grid += `<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
   });
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="overflow:visible">${grid}${bars}</svg>`;
 }
@@ -1363,6 +1520,7 @@ function renderModal() {
   if (state.modal === "herinnering") return reminderModal();
   if (state.modal === "instellingen") return instellingenModal();
   if (state.modal === "afspraak") return afspraakModal();
+  if (state.modal === "samenvatting") return samenvattingModal();
   if (state.modal === "sync") return syncModal();
   return "";
 }
@@ -1565,9 +1723,16 @@ function onAction(ev) {
   const el = ev.currentTarget;
   const action = el.dataset.action;
 
-  if (action === "tab") { state.activeTab = el.dataset.tab; render(); syncCurrentView(); }
+  if (action === "tab") {
+    state.activeTab = el.dataset.tab;
+    if (el.dataset.tab === "dag") state.selectedDate = todayStr();
+    render(); syncCurrentView();
+  }
   else if (action === "day-prev") { state.selectedDate = addDays(state.selectedDate, -1); render(); syncCurrentView(); }
-  else if (action === "day-next") { state.selectedDate = addDays(state.selectedDate, 1); render(); syncCurrentView(); }
+  else if (action === "day-next") {
+    const next = addDays(state.selectedDate, 1);
+    if (next <= todayStr()) { state.selectedDate = next; render(); syncCurrentView(); }
+  }
   else if (action === "day-today") { state.selectedDate = todayStr(); render(); }
   else if (action === "week-prev") { state.selectedDate = addDays(state.selectedDate, -7); render(); syncCurrentView(); }
   else if (action === "week-next") { state.selectedDate = addDays(state.selectedDate, 7); render(); syncCurrentView(); }
@@ -1582,7 +1747,10 @@ function onAction(ev) {
   }
   else if (action === "report-from") { state.report.from = el.value || todayStr(); state.report.preset = "aangepast"; render(); syncCurrentView(); }
   else if (action === "report-to") { state.report.to = el.value || todayStr(); state.report.preset = "aangepast"; render(); syncCurrentView(); }
-  else if (action === "report-print") { window.print(); }
+  else if (action === "report-print") {
+    // korte vertraging zodat de render zeker klaar is voor de printdialoog opent
+    setTimeout(() => { try { window.print(); } catch (e) { alert("Afdrukken lukte niet. Gebruik het menu van je browser (⋮) → Afdrukken → Opslaan als PDF."); } }, 100);
+  }
   else if (action === "report-csv") { exportReportCsv(); }
   else if (action === "sync-connect") {
     const val = document.getElementById("sync-code-input").value.trim().toLowerCase().replace(/\s+/g, "-");
@@ -1632,6 +1800,11 @@ function onAction(ev) {
       void target.offsetWidth; // reset animatie
       target.classList.add("entry-flash");
     }
+  }
+  else if (action === "day-summary") {
+    state.summaryCat = el.dataset.cat;
+    state.modal = "samenvatting";
+    render();
   }
   else if (action === "edit-appt") {
     const a = state.appointments.find(x => x.id === el.dataset.id);
@@ -1726,21 +1899,31 @@ function onAction(ev) {
     const ed = state.editEntry;
     const type = document.getElementById("f-type").value;
     const time = document.getElementById("f-time").value || nowTimeStr();
+    if (isFuture(state.selectedDate, time)) { showModalError("Je kunt geen voeding in de toekomst registreren."); return; }
     let entry;
     if (type === "borst") {
+      const left = Number(document.getElementById("f-left").value) || 0;
+      const right = Number(document.getElementById("f-right").value) || 0;
+      if (left <= 0 && right <= 0) {
+        showModalError("Vul minstens links of rechts in (meer dan 0 minuten).");
+        document.getElementById("f-left").focus();
+        return;
+      }
       const side = document.getElementById("f-side").value;
       entry = {
-        id: ed ? ed.id : uid(), time, type,
-        left: Number(document.getElementById("f-left").value) || 0,
-        right: Number(document.getElementById("f-right").value) || 0,
-        side,
+        id: ed ? ed.id : uid(), time, type, left, right, side,
         note: document.getElementById("f-note").value.trim(),
       };
       setLastBreastSide(side, time, state.selectedDate);
     } else {
+      const amount = Number(document.getElementById("f-amount").value) || 0;
+      if (amount <= 0) {
+        showModalError("Vul een hoeveelheid in (meer dan 0 ml).");
+        document.getElementById("f-amount").focus();
+        return;
+      }
       entry = {
-        id: ed ? ed.id : uid(), time, type,
-        amount: Number(document.getElementById("f-amount").value) || 0,
+        id: ed ? ed.id : uid(), time, type, amount,
         note: document.getElementById("f-note").value.trim(),
       };
     }
@@ -1761,6 +1944,7 @@ function onAction(ev) {
       time: document.getElementById("d-time").value || nowTimeStr(),
       type: document.getElementById("d-type").value,
     };
+    if (isFuture(state.selectedDate, entry.time)) { showModalError("Je kunt geen luier in de toekomst registreren."); return; }
     const day = getDay(state.selectedDate);
     if (ed) {
       const i = day.diapers.findIndex(e => e.id === ed.id);
@@ -1779,6 +1963,7 @@ function onAction(ev) {
       end: document.getElementById("s-end").value || nowTimeStr(),
       note: document.getElementById("s-note").value.trim(),
     };
+    if (isFuture(state.selectedDate, entry.start)) { showModalError("Je kunt geen slaap in de toekomst registreren."); return; }
     const day = getDay(state.selectedDate);
     if (ed) {
       const i = day.sleeps.findIndex(e => e.id === ed.id);
@@ -1798,6 +1983,7 @@ function onAction(ev) {
       value: document.getElementById("h-value").value.trim(),
       note: document.getElementById("h-note").value.trim(),
     };
+    if (isFuture(state.selectedDate, entry.time)) { showModalError("Je kunt geen meting in de toekomst registreren."); return; }
     const day = getDay(state.selectedDate);
     if (ed) {
       const i = day.health.findIndex(e => e.id === ed.id);
