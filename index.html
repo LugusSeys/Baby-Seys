@@ -70,6 +70,8 @@
   .tab-btn.active { background: var(--ink); color: var(--surface); }
 
   .date-nav, .week-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .groei-head { margin-bottom: 18px; }
+  .groei-head .week-label { font-family: 'Fraunces', serif; font-size: 18px; }
   .nav-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line);
     background: var(--surface); display: flex; align-items: center; justify-content: center;
     cursor: pointer; color: var(--ink); flex-shrink: 0; }
@@ -219,6 +221,8 @@
     background: var(--surface-soft); color: var(--ink); }
   .field textarea { resize: vertical; min-height: 54px; font-family: 'Figtree', sans-serif; }
   .seg { display: flex; gap: 8px; }
+  .seg.seg-wrap { flex-wrap: wrap; }
+  .seg.seg-wrap button { flex: 1 1 28%; }
   .seg button { flex: 1; border: 1px solid var(--line); background: var(--surface-soft); padding: 10px 6px;
     border-radius: 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink); }
   .seg button.on { color: var(--surface); border-color: transparent; }
@@ -411,7 +415,7 @@ function longDate(dateStr) {
 function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
 
 function aggregate(dates) {
-  const totals = { feedings:0, ml:0, borst:0, fles:0, borstMin:0, borstL:0, borstR:0, plas:0, poep:0, luiers:0, slaapMin:0, temps:[] };
+  const totals = { feedings:0, ml:0, borst:0, fles:0, borstMin:0, borstL:0, borstR:0, plas:0, poep:0, luiers:0, slaapMin:0, temps:[], otherHealth:[] };
   const perDay = dates.map(date => {
     const day = getDay(date);
     const ml = day.feedings.filter(f=>f.type==="fles").reduce((s,f)=>s+(Number(f.amount)||0),0);
@@ -425,11 +429,13 @@ function aggregate(dates) {
     const poep = day.diapers.filter(x=>x.type==="poep"||x.type==="beide").length;
     const slaapMin = day.sleeps.reduce((s,x)=>s+sleepMinutes(x),0);
     const temps = day.health.filter(h=>h.type==="temperatuur"&&h.value!=="").map(h=>Number(h.value)).filter(v=>!isNaN(v));
+    const otherHealth = day.health.filter(h=>!HEALTH_NUM[h.type]).map(h=>({date, time:h.time||"", type:h.type, value:h.value||"", note:h.note||""}));
     totals.feedings += day.feedings.length; totals.ml += ml; totals.borst += borst; totals.fles += fles;
     totals.borstMin += borstMin; totals.borstL += borstL; totals.borstR += borstR;
     totals.plas += plas; totals.poep += poep; totals.luiers += day.diapers.length; totals.slaapMin += slaapMin;
     totals.temps = totals.temps.concat(temps);
-    return { date, feedings: day.feedings.length, ml, borst, fles, borstMin, borstL, borstR, plas, poep, luiers: day.diapers.length, slaapMin, temps };
+    totals.otherHealth = totals.otherHealth.concat(otherHealth);
+    return { date, feedings: day.feedings.length, ml, borst, fles, borstMin, borstL, borstR, plas, poep, luiers: day.diapers.length, slaapMin, temps, otherHealth };
   });
   return { perDay, ...totals };
 }
@@ -437,14 +443,14 @@ function aggregate(dates) {
 function exportReportCsv() {
   const { from, to } = state.report;
   const agg = aggregate(datesBetween(from, to));
-  const head = ["Datum","Voedingen","ml (fles)","Borstvoedingen","Borst minuten","Borst links (min)","Borst rechts (min)","Flesvoedingen","Luiers","Pipi","Kaka","Slaap (min)","Temp gemiddeld","Temp metingen"];
+  const head = ["Datum","Voedingen","ml (fles)","Borstvoedingen","Borst minuten","Borst links (min)","Borst rechts (min)","Flesvoedingen","Luiers","Pipi","Kaka","Slaap (min)","Temp gemiddeld","Temp metingen","Andere metingen"];
   const rows = [head];
   agg.perDay.forEach(d => {
     const t = d.temps.length ? avg(d.temps).toFixed(1) : "";
-    rows.push([d.date, d.feedings, d.ml, d.borst, d.borstMin, d.borstL, d.borstR, d.fles, d.luiers, d.plas, d.poep, d.slaapMin, t, d.temps.length]);
+    rows.push([d.date, d.feedings, d.ml, d.borst, d.borstMin, d.borstL, d.borstR, d.fles, d.luiers, d.plas, d.poep, d.slaapMin, t, d.temps.length, d.otherHealth.length]);
   });
   const tAll = agg.temps.length ? avg(agg.temps).toFixed(1) : "";
-  rows.push(["TOTAAL", agg.feedings, agg.ml, agg.borst, agg.borstMin, agg.borstL, agg.borstR, agg.fles, agg.luiers, agg.plas, agg.poep, agg.slaapMin, tAll, agg.temps.length]);
+  rows.push(["TOTAAL", agg.feedings, agg.ml, agg.borst, agg.borstMin, agg.borstL, agg.borstR, agg.fles, agg.luiers, agg.plas, agg.poep, agg.slaapMin, tAll, agg.temps.length, agg.otherHealth.length]);
   const csv = "\uFEFF" + rows.map(r => r.join(";")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
@@ -457,7 +463,13 @@ function exportReportCsv() {
 
 const FEED_LABEL = { borst: "Borstvoeding", fles: "Flesvoeding" };
 const DIAPER_LABEL = { plas: "Pipi", poep: "Kaka", beide: "Pipi + kaka" };
-const HEALTH_LABEL = { temperatuur: "Temperatuur", gedrag: "Gedrag", anders: "Anders" };
+const HEALTH_LABEL = { temperatuur: "Temperatuur", gewicht: "Gewicht", lengte: "Lengte", gedrag: "Gedrag", anders: "Anders" };
+// numerieke meting-types met hun eenheid en decimalen
+const HEALTH_NUM = {
+  temperatuur: { unit: "°C", step: "0.1", ph: "bv. 37.2", label: "Temperatuur (°C)" },
+  gewicht: { unit: "g", step: "1", ph: "bv. 4200", label: "Gewicht (gram)" },
+  lengte: { unit: "cm", step: "0.5", ph: "bv. 54", label: "Lengte (cm)" },
+};
 
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
@@ -824,6 +836,7 @@ function syncCurrentView() {
   if (!SYNC.enabled) return;
   if (state.activeTab === "week") { const w = weekDates(state.selectedDate); syncPull(w[0], w[6]); }
   else if (state.activeTab === "rapport") { syncPull(state.report.from, state.report.to); }
+  else if (state.activeTab === "groei") { syncPull(addDays(todayStr(), -400), todayStr()); }
   else if (state.activeTab === "agenda") { pullAppointments(); pullBirthDate(); pullAppName(); }
   else { syncPull(state.selectedDate, state.selectedDate); }
 }
@@ -880,7 +893,7 @@ function labelFor(e) {
   }
   if (e.kind === "diapers") return DIAPER_LABEL[e.type];
   if (e.kind === "sleeps") return `Slaap · ${fmtDuration(sleepMinutes(e))}`;
-  if (e.type === "temperatuur") return `Temperatuur · ${e.value}°C`;
+  if (HEALTH_NUM[e.type]) return `${HEALTH_LABEL[e.type]} · ${e.value}${HEALTH_NUM[e.type].unit}`;
   return `${HEALTH_LABEL[e.type]}${e.value ? " · " + escapeHtml(e.value) : ""}`;
 }
 function entrySub(e) {
@@ -930,10 +943,11 @@ function render() {
       <div class="tabs">
         <button class="tab-btn ${state.activeTab==='dag'?'active':''}" data-action="tab" data-tab="dag">Vandaag</button>
         <button class="tab-btn ${state.activeTab==='week'?'active':''}" data-action="tab" data-tab="week">Weekoverzicht</button>
+        <button class="tab-btn ${state.activeTab==='groei'?'active':''}" data-action="tab" data-tab="groei">Groei</button>
         <button class="tab-btn ${state.activeTab==='agenda'?'active':''}" data-action="tab" data-tab="agenda">Agenda</button>
         <button class="tab-btn ${state.activeTab==='rapport'?'active':''}" data-action="tab" data-tab="rapport">Rapport</button>
       </div>
-      ${state.activeTab === "dag" ? renderDagView() : state.activeTab === "week" ? renderWeekView() : state.activeTab === "agenda" ? renderAgendaView() : renderReportView()}
+      ${state.activeTab === "dag" ? renderDagView() : state.activeTab === "week" ? renderWeekView() : state.activeTab === "groei" ? renderGroeiView() : state.activeTab === "agenda" ? renderAgendaView() : renderReportView()}
       <div class="storage-note">${SYNC.enabled
         ? "Gesynchroniseerd via je gezinscode — wijzigingen verschijnen op al je toestellen."
         : "Gegevens worden lokaal in deze browser bewaard (localStorage) — niet automatisch gedeeld tussen toestellen. Tik op het tandwiel om te synchroniseren."}</div>
@@ -1244,6 +1258,102 @@ function afspraakModal() {
   </div>`;
 }
 
+// Verzamelt alle metingen van een bepaald type over alle opgeslagen dagen, chronologisch.
+function allMeasurements(type) {
+  const out = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith(STORAGE_PREFIX)) continue;
+    const date = key.slice(STORAGE_PREFIX.length);
+    let day;
+    try { day = JSON.parse(localStorage.getItem(key)); } catch (e) { continue; }
+    if (!day || !Array.isArray(day.health)) continue;
+    day.health.forEach(h => {
+      if (h.type === type && h.value !== "" && !isNaN(Number(h.value))) {
+        out.push({ date, time: h.time || "", value: Number(h.value) });
+      }
+    });
+  }
+  out.sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time));
+  return out;
+}
+
+// Lijngrafiek voor een groeireeks met datums op de X-as (all-time).
+function growthChart(points, opts) {
+  opts = opts || {};
+  const unit = opts.unit || "";
+  const color = opts.color || "var(--health)";
+  const yPad = opts.pad != null ? opts.pad : 1;
+  const dec = opts.dec != null ? opts.dec : 1;
+  if (!points.length) return "";
+  const W = 640, H = 220, padL = 52, padR = 12, padT = 16, padB = 40;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const n = points.length;
+  const vals = points.map(p => p.value);
+  let minV = Math.min(...vals) - yPad, maxV = Math.max(...vals) + yPad;
+  if (minV === maxV) { minV -= 1; maxV += 1; }
+  const xFor = i => padL + (n === 1 ? innerW/2 : (i/(n-1))*innerW);
+  const yFor = v => padT + innerH - ((v-minV)/(maxV-minV||1))*innerH;
+
+  let path = "", dots = "";
+  points.forEach((p,i) => {
+    const x = xFor(i), y = yFor(p.value);
+    path += (i ? "L" : "M") + x.toFixed(1) + "," + y.toFixed(1) + " ";
+    dots += `<circle cx="${x}" cy="${y}" r="4" fill="${color}"><title>${shortDate(p.date)} · ${p.value}${unit}</title></circle>`;
+  });
+
+  // Y-as
+  let grid = "";
+  [0,0.25,0.5,0.75,1].forEach(f => {
+    const y = padT + innerH - f*innerH;
+    const val = minV + f*(maxV-minV);
+    grid += `<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    grid += `<text x="${padL-6}" y="${y+3.5}" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-soft)">${val.toFixed(dec)}</text>`;
+  });
+  // X-as labels: eerste, midden, laatste (of alle als weinig punten)
+  const idxs = n <= 5 ? points.map((_,i)=>i) : [0, Math.floor((n-1)/2), n-1];
+  const xlabels = idxs.map(i => `<text x="${xFor(i)}" y="${H-20}" text-anchor="middle" font-size="10" font-family="IBM Plex Mono, monospace" fill="var(--ink-soft)">${shortDate(points[i].date)}</text>`).join("");
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="overflow:visible">
+    ${grid}
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="2"/>
+    ${dots}
+    ${xlabels}
+  </svg>`;
+}
+
+function renderGroeiView() {
+  const gew = allMeasurements("gewicht");
+  const len = allMeasurements("lengte");
+
+  const gewCard = gew.length ? `
+    <div class="card">
+      <div class="section-title">Gewicht</div>
+      <div class="chart-sub">Alle metingen — ${gew.length} meting${gew.length===1?"":"en"} · laatst ${gew[gew.length-1].value} g</div>
+      ${growthChart(gew, { unit:" g", color:"var(--feed)", pad:150, dec:0 })}
+    </div>` : "";
+
+  const lenCard = len.length ? `
+    <div class="card">
+      <div class="section-title">Lengte</div>
+      <div class="chart-sub">Alle metingen — ${len.length} meting${len.length===1?"":"en"} · laatst ${len[len.length-1].value} cm</div>
+      ${growthChart(len, { unit:" cm", color:"var(--sleep)", pad:1.5, dec:1 })}
+    </div>` : "";
+
+  const body = (gewCard + lenCard) || `
+    <div class="card">
+      <div class="empty-state">Nog geen gewicht- of lengtemetingen. Voeg ze toe via ${'"'}+ Meting${'"'} op het Vandaag-scherm.</div>
+    </div>`;
+
+  return `
+    <div class="groei-head">
+      <div class="week-label" style="text-transform:none">Groeicurve</div>
+      <div class="chart-sub">Gewicht en lengte over de volledige periode</div>
+    </div>
+    ${body}
+  `;
+}
+
 function renderWeekView() {
   const dates = weekDates(state.selectedDate);
   const monday = dates[0], sunday = dates[6];
@@ -1259,12 +1369,17 @@ function renderWeekView() {
     const beide = day.diapers.filter(x=>x.type==="beide").length;
     const temps = day.health.filter(h=>h.type==="temperatuur" && h.value !== "");
     const avgTemp = temps.length ? temps.reduce((s,t)=>s+Number(t.value),0)/temps.length : null;
+    const gewMeas = day.health.filter(h=>h.type==="gewicht" && h.value!=="").map(h=>Number(h.value)).filter(v=>!isNaN(v));
+    const lenMeas = day.health.filter(h=>h.type==="lengte" && h.value!=="").map(h=>Number(h.value)).filter(v=>!isNaN(v));
+    const gewicht = gewMeas.length ? gewMeas[gewMeas.length-1] : null; // laatste meting van de dag
+    const lengte = lenMeas.length ? lenMeas[lenMeas.length-1] : null;
     const slaapMin = day.sleeps.reduce((s,x)=>s+sleepMinutes(x),0);
     return {
       date: d, label: DAG_LABELS[i], ml: totalMl, borstMin, borstL, borstR,
       voedingen: day.feedings.length, plas, poep, beide, luiers: day.diapers.length,
       slaapMin, slaapU: Math.round(slaapMin/60*10)/10,
       temp: avgTemp !== null ? Math.round(avgTemp*10)/10 : null,
+      gewicht, lengte,
     };
   });
 
@@ -1279,6 +1394,8 @@ function renderWeekView() {
   const daysWithData = chartData.filter(d=>d.voedingen>0||d.luiers>0||d.slaapMin>0).length || 1;
   const hasBorst = chartData.some(d => d.borstMin > 0);
   const hasFles = chartData.some(d => d.ml > 0);
+  const hasGewicht = chartData.some(d => d.gewicht !== null);
+  const hasLengte = chartData.some(d => d.lengte !== null);
 
   return `
     <div class="week-nav">
@@ -1330,8 +1447,41 @@ function renderWeekView() {
     <div class="card">
       <div class="section-title">Temperatuur</div>
       <div class="chart-sub">Gemiddelde gemeten temperatuur per dag (°C)</div>
-      ${lineChart(chartData)}
+      ${lineChart(chartData, {key:"temp", unit:"°C", dec:1})}
     </div>` : ""}
+
+    ${hasGewicht ? `
+    <div class="card">
+      <div class="section-title">Gewicht</div>
+      <div class="chart-sub">Gemeten gewicht per dag (gram)</div>
+      ${lineChart(chartData, {key:"gewicht", unit:" g", pad:100, dec:0})}
+    </div>` : ""}
+
+    ${hasLengte ? `
+    <div class="card">
+      <div class="section-title">Lengte</div>
+      <div class="chart-sub">Gemeten lengte per dag (cm)</div>
+      ${lineChart(chartData, {key:"lengte", unit:" cm", pad:1, dec:1})}
+    </div>` : ""}
+
+    ${(() => {
+      const others = [];
+      dates.forEach((d,i) => getDay(d).health.filter(h=>!HEALTH_NUM[h.type]).forEach(h => others.push({ date:d, label:DAG_LABELS[i], time:h.time||"", type:h.type, value:h.value||"", note:h.note||"" })));
+      if (!others.length) return "";
+      return `
+      <div class="card">
+        <div class="section-title">Andere metingen</div>
+        <div class="chart-sub">Gedrag en overige metingen deze week</div>
+        <div class="sum-list">
+          ${others.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).map(h => `
+            <div class="sum-row">
+              <span class="sum-time mono">${h.label}${h.time ? " " + h.time : ""}</span>
+              <span class="sum-dot" style="background:var(--health)"></span>
+              <span class="sum-text">${HEALTH_LABEL[h.type] || h.type}${h.value ? " · " + escapeHtml(h.value) : ""}${h.note ? " · " + escapeHtml(h.note) : ""}</span>
+            </div>`).join("")}
+        </div>
+      </div>`;
+    })()}
   `;
 }
 
@@ -1344,6 +1494,12 @@ function renderReportView() {
   const tMin = agg.temps.length ? Math.min(...agg.temps) : null;
   const tMax = agg.temps.length ? Math.max(...agg.temps) : null;
   const tAvg = agg.temps.length ? avg(agg.temps) : null;
+  // laatste gewicht/lengte in de periode (chronologisch)
+  let lastGewicht = null, lastLengte = null;
+  dates.forEach(d => getDay(d).health.forEach(h => {
+    if (h.type === "gewicht" && h.value !== "" && !isNaN(Number(h.value))) lastGewicht = Number(h.value);
+    if (h.type === "lengte" && h.value !== "" && !isNaN(Number(h.value))) lastLengte = Number(h.value);
+  }));
   const periodLabel = from === to ? formatDateNice(from) : `${longDate(from)} – ${longDate(to)}`;
   const presets = [["dag","Dag"],["week","Week"],["maand","Maand"],["aangepast","Aangepast"]];
 
@@ -1381,11 +1537,25 @@ function renderReportView() {
           <div class="rep-detail">${agg.plas} pipi · ${agg.poep} kaka<br>gem. ${(agg.luiers/denom).toFixed(1)} per dag</div>
         </div>
         <div class="rep-block" style="border-left-color:var(--health)">
-          <div class="rep-lbl">Temperatuur</div>
-          ${agg.temps.length
-            ? `<div class="rep-main">gem. ${tAvg.toFixed(1)}°C</div>
-               <div class="rep-detail">min ${tMin.toFixed(1)}° · max ${tMax.toFixed(1)}° · ${agg.temps.length} metingen</div>`
-            : `<div class="rep-main" style="color:var(--ink-soft)">—</div><div class="rep-detail">geen metingen</div>`}
+          <div class="rep-lbl">Gezondheid</div>
+          ${(() => {
+            const extra = [];
+            if (lastGewicht !== null) extra.push(`gewicht ${lastGewicht} g`);
+            if (lastLengte !== null) extra.push(`lengte ${lastLengte} cm`);
+            const extraLine = extra.length ? `<br>${extra.join(" · ")} (laatste)` : "";
+            if (agg.temps.length) {
+              return `<div class="rep-main">temp. gem. ${tAvg.toFixed(1)}°C</div>
+                <div class="rep-detail">min ${tMin.toFixed(1)}° · max ${tMax.toFixed(1)}° · ${agg.temps.length} metingen${agg.otherHealth.length ? `<br>${agg.otherHealth.length} andere meting${agg.otherHealth.length===1?"":"en"}` : ""}${extraLine}</div>`;
+            }
+            if (lastGewicht !== null || lastLengte !== null || agg.otherHealth.length) {
+              const bits = [];
+              if (lastGewicht !== null) bits.push(`${lastGewicht} g`);
+              if (lastLengte !== null) bits.push(`${lastLengte} cm`);
+              return `<div class="rep-main">${bits.join(" · ") || (agg.otherHealth.length + " meting" + (agg.otherHealth.length===1?"":"en"))}</div>
+                <div class="rep-detail">geen temperatuur${agg.otherHealth.length ? ` · ${agg.otherHealth.length} andere meting${agg.otherHealth.length===1?"":"en"}` : ""}${lastGewicht!==null||lastLengte!==null?" (laatste meting)":""}</div>`;
+            }
+            return `<div class="rep-main" style="color:var(--ink-soft)">—</div><div class="rep-detail">geen metingen</div>`;
+          })()}
         </div>
       </div>
     </div>
@@ -1416,6 +1586,20 @@ function renderReportView() {
         </tbody>
       </table></div>`}
     </div>
+
+    ${agg.otherHealth.length ? `
+    <div class="card">
+      <div class="section-title">Andere metingen</div>
+      <div class="chart-sub">Gedrag en overige metingen in deze periode</div>
+      <div class="sum-list">
+        ${agg.otherHealth.slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).map(h => `
+          <div class="sum-row">
+            <span class="sum-time mono">${shortDate(h.date)}${h.time ? " " + h.time : ""}</span>
+            <span class="sum-dot" style="background:var(--health)"></span>
+            <span class="sum-text">${HEALTH_LABEL[h.type] || h.type}${h.value ? " · " + escapeHtml(h.value) : ""}${h.note ? " · " + escapeHtml(h.note) : ""}</span>
+          </div>`).join("")}
+      </div>
+    </div>` : ""}
 
     <div class="report-actions">
       <button class="report-btn-primary" data-action="report-print">${ICON.printer} Opslaan als PDF</button>
@@ -1479,34 +1663,44 @@ function barChart(data, series, fmt, opts) {
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="overflow:visible">${grid}${bars}</svg>`;
 }
 
-function lineChart(data) {
-  const W = 640, H = 170, padL = 34, padR = 10, padT = 16, padB = 26;
+function lineChart(data, opts) {
+  opts = opts || {};
+  const key = opts.key || "temp";
+  const unit = opts.unit || "°C";
+  const color = opts.color || "var(--health)";
+  const yPad = opts.pad != null ? opts.pad : 0.5;
+  const dec = opts.dec != null ? opts.dec : 1;
+  const W = 640, H = 180, padL = 46, padR = 10, padT = 16, padB = 26;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const n = data.length;
-  const pts = data.map((d,i)=>({...d, x: padL + (i/(n-1))*innerW}));
-  const vals = pts.filter(p=>p.temp!==null).map(p=>p.temp);
-  const minV = vals.length ? Math.min(...vals)-0.5 : 36, maxV = vals.length ? Math.max(...vals)+0.5 : 38;
+  const pts = data.map((d,i)=>({ label: d.label, v: d[key], x: padL + (i/(Math.max(n-1,1)))*innerW }));
+  const vals = pts.filter(p=>p.v!==null && p.v!==undefined).map(p=>p.v);
+  if (!vals.length) return "";
+  let minV = Math.min(...vals) - yPad, maxV = Math.max(...vals) + yPad;
+  if (minV === maxV) { minV -= 1; maxV += 1; }
   const yFor = v => padT + innerH - ((v-minV)/(maxV-minV||1))*innerH;
 
   let path = "", dots = "", started = false;
   pts.forEach(p => {
-    if (p.temp === null) return;
-    const y = yFor(p.temp);
+    if (p.v === null || p.v === undefined) return;
+    const y = yFor(p.v);
     path += (started ? "L" : "M") + p.x.toFixed(1) + "," + y.toFixed(1) + " ";
     started = true;
-    dots += `<circle cx="${p.x}" cy="${y}" r="4" fill="var(--health)"><title>${p.label} · ${p.temp}°C</title></circle>`;
+    dots += `<circle cx="${p.x}" cy="${y}" r="4" fill="${color}"><title>${p.label} · ${p.v}${unit}</title></circle>`;
   });
 
   const labels = pts.map(p => `<text x="${p.x}" y="${H-6}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--ink-soft)">${p.label}</text>`).join("");
   let grid = "";
   [0,0.5,1].forEach(f => {
     const y = padT + innerH - f*innerH;
+    const val = minV + f*(maxV-minV);
     grid += `<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    grid += `<text x="${padL-6}" y="${y+3.5}" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--ink-soft)">${val.toFixed(dec)}</text>`;
   });
 
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="overflow:visible">
     ${grid}
-    <path d="${path}" fill="none" stroke="var(--health)" stroke-width="2"/>
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="2"/>
     ${dots}
     ${labels}
   </svg>`;
@@ -1690,8 +1884,9 @@ function healthModal() {
   const timeVal = ed ? ed.time : nowTimeStr();
   const valueVal = ed && ed.value != null ? escapeHtml(String(ed.value)) : "";
   const noteVal = ed && ed.note ? escapeHtml(ed.note) : "";
-  const opts = [["temperatuur","Temperatuur"],["gedrag","Gedrag"],["anders","Anders"]];
-  const valLabel = type === "temperatuur" ? "Temperatuur (°C)" : type === "gedrag" ? "Beschrijving" : "Waarde";
+  const opts = [["temperatuur","Temp."],["gewicht","Gewicht"],["lengte","Lengte"],["gedrag","Gedrag"],["anders","Anders"]];
+  const num = HEALTH_NUM[type];
+  const valLabel = num ? num.label : type === "gedrag" ? "Beschrijving" : "Waarde";
   return `
   <div class="modal-overlay" data-action="close-modal">
     <div class="modal" onclick="event.stopPropagation()">
@@ -1699,13 +1894,13 @@ function healthModal() {
         <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
       <div class="field"><label>Tijdstip</label><input type="time" id="h-time" value="${timeVal}"></div>
       <div class="field"><label>Type</label>
-        <div class="seg">
+        <div class="seg seg-wrap">
           ${opts.map(([v,l])=>`<button type="button" class="${type===v?'on':''}" style="${type===v?'background:var(--health)':''}" data-action="seg" data-group="h-type" data-value="${v}">${l}</button>`).join("")}
         </div>
         <input type="hidden" id="h-type" value="${type}">
       </div>
       <div class="field"><label id="h-value-label">${valLabel}</label>
-        <input type="${type==='temperatuur'?'number':'text'}" step="0.1" id="h-value" placeholder="bv. 37.2" value="${valueVal}"></div>
+        <input type="${num?'number':'text'}" ${num?`step="${num.step}"`:""} id="h-value" placeholder="${num?num.ph:"bv. onrustig, veel huilen"}" value="${valueVal}"></div>
       <div class="field"><label>Notitie (optioneel)</label><textarea id="h-note">${noteVal}</textarea></div>
       <button class="submit-btn" style="background:var(--health)" data-action="save-health">Meting ${ed ? "bijwerken" : "opslaan"}</button>
     </div>
@@ -1886,11 +2081,12 @@ function onAction(ev) {
     if (group === "h-type") {
       const label = document.getElementById("h-value-label");
       const valueInput = document.getElementById("h-value");
-      if (value === "temperatuur") {
-        label.textContent = "Temperatuur (°C)";
-        valueInput.type = "number"; valueInput.step = "0.1"; valueInput.placeholder = "bv. 37.2";
+      const num = HEALTH_NUM[value];
+      if (num) {
+        label.textContent = num.label;
+        valueInput.type = "number"; valueInput.step = num.step; valueInput.placeholder = num.ph;
       } else {
-        label.textContent = "Waarde";
+        label.textContent = value === "gedrag" ? "Beschrijving" : "Waarde";
         valueInput.type = "text"; valueInput.removeAttribute("step"); valueInput.placeholder = "bv. onrustig, veel huilen";
       }
     }
