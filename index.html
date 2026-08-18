@@ -214,6 +214,13 @@
   .modal-close { border: none; background: var(--surface-soft); width: 30px; height: 30px;
     border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .field { margin-bottom: 14px; }
+  .timer-row { display: flex; align-items: center; gap: 10px; }
+  .timer-btn { border: 1px solid var(--feed); background: var(--feed-soft); color: var(--feed);
+    border-radius: 12px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: 'Figtree', sans-serif; flex-shrink: 0; min-width: 64px; }
+  .timer-btn.running { background: var(--feed); color: var(--surface); }
+  .timer-display { font-size: 15px; font-weight: 600; color: var(--ink-soft); min-width: 46px; flex-shrink: 0; }
+  .timer-row input { flex: 1; min-width: 0; }
   .field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft);
     margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
   .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line);
@@ -728,9 +735,13 @@ async function pullBirthDate() {
   if (!SYNC.enabled) return;
   try {
     const rows = await sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&id=eq.${encodeURIComponent(BIRTH_ROW_ID)}&select=data`);
-    if (rows && rows.length && rows[0].data) {
-      const cloud = String(rows[0].data.value || "").trim();
+    const cloud = rows && rows.length && rows[0].data ? String(rows[0].data.value || "").trim() : "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(cloud)) {
+      // enkel een geldige clouddatum mag de lokale vervangen
       if (cloud !== (getBirthDate() || "")) { setBirthDate(cloud); if (!state.modal) render(); }
+    } else if (getBirthDate()) {
+      // cloud is leeg maar lokaal bestaat een datum -> push de lokale op
+      queueBirthDate(getBirthDate());
     }
   } catch (e) { /* stil negeren */ }
 }
@@ -739,7 +750,7 @@ async function reconcileBirthDate() {
   try {
     const rows = await sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&id=eq.${encodeURIComponent(BIRTH_ROW_ID)}&select=data`);
     const cloud = rows && rows.length && rows[0].data ? String(rows[0].data.value || "").trim() : null;
-    if (cloud) {
+    if (cloud && /^\d{4}-\d{2}-\d{2}$/.test(cloud)) {
       if (cloud !== (getBirthDate() || "")) { setBirthDate(cloud); if (!state.modal) render(); }
     } else {
       const local = getBirthDate();
@@ -849,6 +860,11 @@ const ICON = {
   circle: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg>`,
   diaper: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v3a11 11 0 0 1-9 10.8A11 11 0 0 1 3 9V6Z"/><path d="M3 8c3 1.2 5.4 1.8 9 1.8S18 9.2 21 8"/></svg>`,
   thermo: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.5a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>`,
+  scale: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 4c0-1.5 1.8-2.5 4-2.5S16 2.5 16 4"/><path d="M12 9l-2.5 4.5h5L12 9Z"/></svg>`,
+  ruler: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M7 7v3M12 7v4M17 7v3"/></svg>`,
+  smiley: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></svg>`,
+  note: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12l-4 4H4V4Z"/><path d="M15 20v-4h5"/><path d="M8 9h8M8 13h4"/></svg>`,
+  vitals: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>`,
   chevronLeft: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
   chevronRight: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`,
   trash: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>`,
@@ -865,19 +881,21 @@ const ICON = {
 };
 function kindColor(kind) { return kind === "feedings" ? "var(--feed)" : kind === "diapers" ? "var(--diaper)" : kind === "sleeps" ? "var(--sleep)" : "var(--health)"; }
 function kindSoft(kind) { return kind === "feedings" ? "var(--feed-soft)" : kind === "diapers" ? "var(--diaper-soft)" : kind === "sleeps" ? "var(--sleep-soft)" : "var(--health-soft)"; }
+const HEALTH_ICON = { temperatuur: "thermo", gewicht: "scale", lengte: "ruler", gedrag: "smiley", anders: "note" };
+const HEALTH_EMOJI = { temperatuur: "🌡", gewicht: "⚖️", lengte: "📏", gedrag: "🙂", anders: "📝" };
 function kindIcon(e) {
   const kind = e.kind || e;
   if (kind === "feedings") return (e.type === "borst") ? ICON.breast : ICON.bottle;
   if (kind === "diapers") return ICON.diaper;
   if (kind === "sleeps") return ICON.moon;
-  return ICON.thermo;
+  return ICON[HEALTH_ICON[e.type] || "thermo"];
 }
 function kindIconSmall(e) {
   // compacte glyphs voor het dagritme-rooster
   const kind = e.kind || e;
   if (kind === "feedings") return (e.type === "borst") ? "🤱" : "🍼";
   if (kind === "diapers") return ICON.diaper;
-  if (kind === "health") return "🌡";
+  if (kind === "health") return HEALTH_EMOJI[e.type] || "🌡";
   if (kind === "sleeps") return "🌙";
   return "•";
 }
@@ -914,6 +932,7 @@ const state = {
   appointments: [],  // agenda-afspraken {id, date, time, title, note}
   editAppt: null,    // de te bewerken afspraak (of null bij nieuwe)
   report: { preset: "week", from: mondayOf(todayStr()), to: addDays(mondayOf(todayStr()), 6) },
+  breastTimer: { left: { running: false, startedAt: 0 }, right: { running: false, startedAt: 0 } },
 };
 
 function getDay(dateStr) {
@@ -1043,7 +1062,7 @@ function renderDagView() {
       <button class="quick-btn feed" data-action="open-modal" data-modal="voeding">${ICON.droplet}<span>+ Voeding</span></button>
       <button class="quick-btn diaper" data-action="open-modal" data-modal="luier">${ICON.circle}<span>+ Luier</span></button>
       <button class="quick-btn sleep" data-action="open-modal" data-modal="slaap">${ICON.moon}<span>+ Slaap</span></button>
-      <button class="quick-btn health" data-action="open-modal" data-modal="meting">${ICON.thermo}<span>+ Meting</span></button>
+      <button class="quick-btn health" data-action="open-modal" data-modal="meting">${ICON.vitals}<span>+ Meting</span></button>
     </div>
 
     <div class="card">
@@ -1212,7 +1231,7 @@ function samenvattingModal() {
     const plas = dp.filter(x=>x.type==="plas").length;
     const poep = dp.filter(x=>x.type==="poep").length;
     const beide = dp.filter(x=>x.type==="beide").length;
-    body = dp.length ? dp.map(x => rij(x.time, DIAPER_LABEL[x.type], "var(--diaper)")).join("")
+    body = dp.length ? dp.map(x => rij(x.time, DIAPER_LABEL[x.type] + (x.note ? " · " + escapeHtml(x.note) : ""), "var(--diaper)")).join("")
       : `<div class="sum-empty">Nog geen luiers vandaag.</div>`;
     totalen = `
       <div class="sum-tot"><span>${dp.length}</span> luiers</div>
@@ -1719,6 +1738,30 @@ function renderModal() {
   return "";
 }
 
+// ---- borstvoeding timer ----
+function timerElapsedSec(side) {
+  const t = state.breastTimer[side];
+  if (!t.running) return 0;
+  return Math.floor((Date.now() - t.startedAt) / 1000);
+}
+function timerDisplay(side) {
+  const sec = timerElapsedSec(side);
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return `${pad(m)}:${pad(s)}`;
+}
+function tickBreastTimers() {
+  ["left","right"].forEach(side => {
+    if (!state.breastTimer[side].running) return;
+    const disp = document.getElementById("timer-disp-" + side);
+    if (disp) disp.textContent = timerDisplay(side);
+  });
+}
+function resetBreastTimers() {
+  state.breastTimer.left = { running: false, startedAt: 0 };
+  state.breastTimer.right = { running: false, startedAt: 0 };
+}
+setInterval(tickBreastTimers, 1000);
+
 function feedingModal() {
   const ed = state.editEntry;
   const type = ed ? ed.type : "borst";
@@ -1745,8 +1788,22 @@ function feedingModal() {
       </div>
       <div id="f-borst-fields" style="display:${type==='borst'?'':'none'}">
         ${lastHint ? `<div class="chart-sub" style="margin-top:-4px">${lastHint}</div>` : ""}
-        <div class="field"><label>Links (minuten)</label><input type="number" min="0" id="f-left" placeholder="bv. 10" value="${leftVal}"></div>
-        <div class="field"><label>Rechts (minuten)</label><input type="number" min="0" id="f-right" placeholder="bv. 5" value="${rightVal}"></div>
+        <div class="field">
+          <label>Links</label>
+          <div class="timer-row">
+            <button type="button" class="timer-btn" data-action="breast-timer" data-side="left" id="timer-btn-left">Start</button>
+            <span class="timer-display mono" id="timer-disp-left">${timerDisplay("left")}</span>
+            <input type="number" min="0" id="f-left" placeholder="min" value="${leftVal}">
+          </div>
+        </div>
+        <div class="field">
+          <label>Rechts</label>
+          <div class="timer-row">
+            <button type="button" class="timer-btn" data-action="breast-timer" data-side="right" id="timer-btn-right">Start</button>
+            <span class="timer-display mono" id="timer-disp-right">${timerDisplay("right")}</span>
+            <input type="number" min="0" id="f-right" placeholder="min" value="${rightVal}">
+          </div>
+        </div>
         <div class="field"><label>Laatste kant</label>
           <div class="seg">
             <button type="button" class="${defaultSide==='links'?'on':''}" style="${defaultSide==='links'?'background:var(--feed)':''}" data-action="seg" data-group="f-side" data-value="links">Links</button>
@@ -1780,6 +1837,7 @@ function diaperModal() {
         </div>
         <input type="hidden" id="d-type" value="${type}">
       </div>
+      <div class="field"><label>Notitie (optioneel)</label><textarea id="d-note" placeholder="bv. lichte uitslag">${ed && ed.note ? escapeHtml(ed.note) : ""}</textarea></div>
       <button class="submit-btn" style="background:var(--diaper)" data-action="save-diaper">Luier ${ed ? "bijwerken" : "opslaan"}</button>
     </div>
   </div>`;
@@ -1970,7 +2028,7 @@ function onAction(ev) {
   }
   else if (action === "sync-resync") { syncCurrentView(); }
   else if (action === "open-modal") { state.editEntry = null; state.editAppt = null; state.modal = el.dataset.modal; render(); }
-  else if (action === "close-modal") { state.editEntry = null; state.editAppt = null; state.modal = null; render(); }
+  else if (action === "close-modal") { resetBreastTimers(); state.editEntry = null; state.editAppt = null; state.modal = null; render(); }
   else if (action === "edit-entry") {
     const kind = el.dataset.kind, id = el.dataset.id;
     const day = getDay(state.selectedDate);
@@ -2058,6 +2116,35 @@ function onAction(ev) {
     queueBirthDate(getBirthDate() || "");
     state.modal = null; render();
   }
+  else if (action === "breast-timer") {
+    const side = el.dataset.side; // "left" of "right"
+    const t = state.breastTimer[side];
+    const input = document.getElementById(side === "left" ? "f-left" : "f-right");
+    const btn = document.getElementById("timer-btn-" + side);
+    const disp = document.getElementById("timer-disp-" + side);
+    if (!t.running) {
+      // start
+      t.running = true; t.startedAt = Date.now();
+      if (btn) { btn.textContent = "Stop"; btn.classList.add("running"); }
+    } else {
+      // stop -> tel afgeronde minuten op bij het veld (min. 1 min als er iets geteld is)
+      const sec = timerElapsedSec(side);
+      t.running = false; t.startedAt = 0;
+      let mins = Math.round(sec / 60);
+      if (sec > 0 && mins === 0) mins = 1;
+      if (input) input.value = (Number(input.value) || 0) + mins;
+      if (btn) { btn.textContent = "Start"; btn.classList.remove("running"); }
+      if (disp) disp.textContent = "00:00";
+      // zet de laatste kant automatisch op deze kant
+      const sideNl = side === "left" ? "links" : "rechts";
+      const hidden = document.getElementById("f-side"); if (hidden) hidden.value = sideNl;
+      document.querySelectorAll("[data-group='f-side']").forEach(b => {
+        const on = b.dataset.value === sideNl;
+        b.classList.toggle("on", on);
+        b.style.background = on ? "var(--feed)" : "";
+      });
+    }
+  }
   else if (action === "seg") {
     const group = el.dataset.group, value = el.dataset.value;
     document.getElementById(group).value = value;
@@ -2131,6 +2218,7 @@ function onAction(ev) {
       day.feedings.push(entry);
     }
     persistDay(state.selectedDate, { kind: "feedings", entry });
+    resetBreastTimers();
     state.editEntry = null; state.modal = null; render();
   }
   else if (action === "save-diaper") {
@@ -2139,6 +2227,7 @@ function onAction(ev) {
       id: ed ? ed.id : uid(),
       time: document.getElementById("d-time").value || nowTimeStr(),
       type: document.getElementById("d-type").value,
+      note: document.getElementById("d-note").value.trim(),
     };
     if (isFuture(state.selectedDate, entry.time)) { showModalError("Je kunt geen luier in de toekomst registreren."); return; }
     const day = getDay(state.selectedDate);
