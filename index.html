@@ -177,6 +177,19 @@
     border-radius: 14px; padding: 10px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
     font-family: 'Figtree', sans-serif; flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
   .reminder-btn:hover { background: var(--feed-soft); }
+
+  .sleep-timer-card { display: flex; align-items: center; gap: 14px; background: var(--sleep-soft);
+    border: 1px solid var(--sleep); border-radius: 20px; padding: 16px 18px; margin-bottom: 18px; }
+  .sleep-timer-card.running { border-width: 2px; }
+  .sleep-timer-info { flex: 1; min-width: 0; }
+  .sleep-timer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
+  .sleep-timer-time { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; margin: 2px 0; line-height: 1.1; color: var(--ink); }
+  .sleep-timer-sub { font-size: 12.5px; color: var(--ink-soft); }
+  .sleep-timer-btn { border: none; border-radius: 14px; padding: 12px 18px; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: 'Figtree', sans-serif; flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+  .sleep-timer-btn.start { background: var(--sleep); color: var(--surface); }
+  .sleep-timer-btn.stop { background: var(--sleep); color: var(--surface); }
+  .sleep-timer-btn:active { transform: scale(0.97); }
   .reminder-presets { display: flex; flex-wrap: wrap; gap: 7px; }
   .chip-btn { border: 1px solid var(--line); background: var(--surface-soft); color: var(--ink);
     border-radius: 999px; padding: 7px 13px; font-size: 13px; font-weight: 600; cursor: pointer;
@@ -260,6 +273,12 @@
   .preset-btn { border: none; background: transparent; padding: 7px 14px; border-radius: 999px;
     font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; font-family: 'Figtree', sans-serif; }
   .preset-btn.active { background: var(--ink); color: var(--surface); }
+  .cat-row { flex-wrap: wrap; }
+  .rep-day { margin-bottom: 16px; }
+  .rep-day:last-child { margin-bottom: 0; }
+  .rep-day-head { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 600; text-transform: capitalize;
+    padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+  .rep-note { color: var(--ink-soft); font-style: italic; }
   .date-inputs { display: flex; gap: 8px; align-items: flex-end; }
   .date-inputs .field { margin-bottom: 0; }
   .date-inputs label { margin-bottom: 4px; }
@@ -299,7 +318,7 @@
     @page { margin: 14mm; }
     html, body { background: #fff !important; }
     .sync-btn, .tabs, .date-nav, .week-nav, .report-controls, .report-actions,
-    .storage-note, .quick-add, .stats-row, .reminder-card, .ribbon-title, .hgrid { display: none !important; }
+    .storage-note, .quick-add, .stats-row, .reminder-card, .sleep-timer-card, .ribbon-title, .hgrid { display: none !important; }
     .top .tagline { display: block !important; }
     .shell { max-width: none; padding: 0; }
     .card { border: 1px solid #ccc; border-radius: 8px; box-shadow: none;
@@ -398,6 +417,33 @@ function fmtDuration(min) {
   return `${m}m`;
 }
 
+// ---------------- actieve (lopende) slaap ----------------
+// Blijft in localStorage staan, dus loopt door na refresh of app sluiten.
+const ACTIVE_SLEEP_KEY = "babyritme:activeSleep";
+function getActiveSleep() {
+  try {
+    const raw = localStorage.getItem(ACTIVE_SLEEP_KEY);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    return (o && o.startMs) ? o : null;
+  } catch (e) { return null; }
+}
+function startActiveSleep() {
+  localStorage.setItem(ACTIVE_SLEEP_KEY, JSON.stringify({ startMs: Date.now() }));
+}
+function clearActiveSleep() {
+  localStorage.removeItem(ACTIVE_SLEEP_KEY);
+}
+function fmtClock(ms) {
+  const d = new Date(ms);
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function activeSleepDuration(startMs) {
+  const sec = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+  const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+  return h ? `${h}u ${pad(m)}m ${pad(s)}s` : `${m}m ${pad(s)}s`;
+}
+
 // ---------------- rapport-helpers ----------------
 function datesBetween(from, to) {
   if (from > to) [from, to] = [to, from];
@@ -449,7 +495,52 @@ function aggregate(dates) {
 
 function exportReportCsv() {
   const { from, to } = state.report;
-  const agg = aggregate(datesBetween(from, to));
+  const cat = state.report.cat || "alles";
+  const slug = getAppName().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "baby-dagboek";
+  const dates = datesBetween(from, to);
+
+  // Detail-export voor één categorie (elke registratie op een rij, incl. notitie)
+  if (cat !== "alles") {
+    let head, rows = [];
+    dates.forEach(d => {
+      const day = getDay(d);
+      if (cat === "voeding") {
+        day.feedings.slice().sort((a,b)=>timeToMinutes(a.time||"0:0")-timeToMinutes(b.time||"0:0")).forEach(e => {
+          rows.push([d, e.time||"", e.type==="borst"?"Borstvoeding":"Flesvoeding",
+            e.type==="borst"?(Number(e.left)||0):"", e.type==="borst"?(Number(e.right)||0):"",
+            e.type==="fles"?(Number(e.amount)||0):"", e.type==="borst"?(e.side||""):"", (e.note||"")]);
+        });
+        head = ["Datum","Tijd","Type","Links (min)","Rechts (min)","ml (fles)","Laatste kant","Notitie"];
+      } else if (cat === "luiers") {
+        day.diapers.slice().sort((a,b)=>timeToMinutes(a.time||"0:0")-timeToMinutes(b.time||"0:0")).forEach(e => {
+          rows.push([d, e.time||"", DIAPER_LABEL[e.type]||e.type, (e.note||"")]);
+        });
+        head = ["Datum","Tijd","Type","Notitie"];
+      } else if (cat === "slaap") {
+        day.sleeps.slice().sort((a,b)=>timeToMinutes(a.start||"0:0")-timeToMinutes(b.start||"0:0")).forEach(e => {
+          rows.push([d, e.start||"", e.end||"", sleepMinutes(e), (e.note||"")]);
+        });
+        head = ["Datum","Start","Einde","Duur (min)","Notitie"];
+      } else if (cat === "gezondheid") {
+        day.health.slice().sort((a,b)=>timeToMinutes(a.time||"0:0")-timeToMinutes(b.time||"0:0")).forEach(e => {
+          rows.push([d, e.time||"", HEALTH_LABEL[e.type]||e.type, (e.value||""), HEALTH_NUM[e.type]?HEALTH_NUM[e.type].unit:"", (e.note||"")]);
+        });
+        head = ["Datum","Tijd","Type","Waarde","Eenheid","Notitie"];
+      }
+    });
+    if (!head) head = ["Datum","Tijd","Type","Notitie"];
+    const all = [head, ...rows];
+    const csv = "\uFEFF" + all.map(r => r.map(c => String(c).replace(/;/g, ",")).join(";")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${slug}_${cat}_${from}_tot_${to}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 200);
+    return;
+  }
+
+  const agg = aggregate(dates);
   const head = ["Datum","Voedingen","ml (fles)","Borstvoedingen","Borst minuten","Borst links (min)","Borst rechts (min)","Flesvoedingen","Luiers","Pipi","Kaka","Slaap (min)","Temp gemiddeld","Temp metingen","Andere metingen"];
   const rows = [head];
   agg.perDay.forEach(d => {
@@ -461,7 +552,6 @@ function exportReportCsv() {
   const csv = "\uFEFF" + rows.map(r => r.join(";")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
-  const slug = getAppName().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "baby-dagboek";
   const a = document.createElement("a");
   a.href = url; a.download = `${slug}_${from}_tot_${to}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
@@ -508,9 +598,14 @@ function getBirthDate() {
   const b = localStorage.getItem("babyritme:birthDate");
   return (b && /^\d{4}-\d{2}-\d{2}$/.test(b)) ? b : null;
 }
-function setBirthDate(dateStr) {
+function getBirthDateTs() {
+  return Number(localStorage.getItem("babyritme:birthDateTs")) || 0;
+}
+function setBirthDate(dateStr, ts) {
   if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) localStorage.setItem("babyritme:birthDate", dateStr);
   else localStorage.removeItem("babyritme:birthDate");
+  // tijdstempel bijwerken: meegegeven waarde (van cloud) of nu (lokale wijziging)
+  localStorage.setItem("babyritme:birthDateTs", String(ts || Date.now()));
 }
 // Leeftijd altijd als maanden + weken + dagen (weken en dagen binnen de maand).
 function ageText(birth) {
@@ -723,39 +818,50 @@ async function reconcileAppName() {
 
 // Geboortedatum als gedeelde gezinsinstelling (zelfde principe als de naam).
 const BIRTH_ROW_ID = "settings:birthDate";
-function queueBirthDate(value) {
+function queueBirthDate(value, ts) {
   if (!SYNC.enabled) return;
   outboxAdd({ op: "upsert", row: {
     id: BIRTH_ROW_ID, family_code: SYNC.code, date: "1970-01-01",
-    kind: "settings", data: { key: "birthDate", value },
+    kind: "settings", data: { key: "birthDate", value, ts: ts || getBirthDateTs() || Date.now() },
   }});
   flushOutbox();
+}
+// Verwerkt een cloud-rij: overschrijft lokaal alleen als de cloud nieuwer is; anders pusht lokaal op.
+function applyCloudBirth(rows) {
+  const d = rows && rows.length && rows[0].data ? rows[0].data : null;
+  const cloudVal = d ? String(d.value || "").trim() : "";
+  const cloudTs = d ? (Number(d.ts) || 0) : 0;
+  const localVal = getBirthDate() || "";
+  const localTs = getBirthDateTs();
+  const cloudValid = /^\d{4}-\d{2}-\d{2}$/.test(cloudVal);
+
+  // Cloud nieuwer dan lokaal -> lokaal overnemen (ook een lege/gewiste cloud als die nieuwer is)
+  if (cloudTs > localTs) {
+    if (cloudValid) {
+      if (cloudVal !== localVal) { setBirthDate(cloudVal, cloudTs); if (!state.modal) render(); }
+      else localStorage.setItem("babyritme:birthDateTs", String(cloudTs));
+    } else if (localVal) {
+      setBirthDate("", cloudTs); if (!state.modal) render();
+    }
+    return;
+  }
+  // Lokaal is (gelijk of) nieuwer -> onze versie naar de cloud pushen als ze verschilt
+  if (localVal && (localVal !== cloudVal || localTs > cloudTs)) {
+    queueBirthDate(localVal, localTs);
+  }
 }
 async function pullBirthDate() {
   if (!SYNC.enabled) return;
   try {
     const rows = await sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&id=eq.${encodeURIComponent(BIRTH_ROW_ID)}&select=data`);
-    const cloud = rows && rows.length && rows[0].data ? String(rows[0].data.value || "").trim() : "";
-    if (/^\d{4}-\d{2}-\d{2}$/.test(cloud)) {
-      // enkel een geldige clouddatum mag de lokale vervangen
-      if (cloud !== (getBirthDate() || "")) { setBirthDate(cloud); if (!state.modal) render(); }
-    } else if (getBirthDate()) {
-      // cloud is leeg maar lokaal bestaat een datum -> push de lokale op
-      queueBirthDate(getBirthDate());
-    }
+    applyCloudBirth(rows);
   } catch (e) { /* stil negeren */ }
 }
 async function reconcileBirthDate() {
   if (!SYNC.enabled) return;
   try {
     const rows = await sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&id=eq.${encodeURIComponent(BIRTH_ROW_ID)}&select=data`);
-    const cloud = rows && rows.length && rows[0].data ? String(rows[0].data.value || "").trim() : null;
-    if (cloud && /^\d{4}-\d{2}-\d{2}$/.test(cloud)) {
-      if (cloud !== (getBirthDate() || "")) { setBirthDate(cloud); if (!state.modal) render(); }
-    } else {
-      const local = getBirthDate();
-      if (local) queueBirthDate(local);
-    }
+    applyCloudBirth(rows);
   } catch (e) { /* stil negeren */ }
 }
 
@@ -931,7 +1037,7 @@ const state = {
   editEntry: null,   // de te bewerken registratie (of null bij nieuwe)
   appointments: [],  // agenda-afspraken {id, date, time, title, note}
   editAppt: null,    // de te bewerken afspraak (of null bij nieuwe)
-  report: { preset: "week", from: mondayOf(todayStr()), to: addDays(mondayOf(todayStr()), 6) },
+  report: { preset: "week", from: mondayOf(todayStr()), to: addDays(mondayOf(todayStr()), 6), cat: "alles" },
   breastTimer: { left: { running: false, startedAt: 0 }, right: { running: false, startedAt: 0 } },
 };
 
@@ -1058,6 +1164,8 @@ function renderDagView() {
 
     ${renderReminderCard()}
 
+    ${renderSleepTimerCard()}
+
     <div class="quick-add">
       <button class="quick-btn feed" data-action="open-modal" data-modal="voeding">${ICON.droplet}<span>+ Voeding</span></button>
       <button class="quick-btn diaper" data-action="open-modal" data-modal="luier">${ICON.circle}<span>+ Luier</span></button>
@@ -1086,6 +1194,28 @@ function renderDagView() {
   `;
 }
 
+function renderSleepTimerCard() {
+  const active = getActiveSleep();
+  if (active) {
+    return `
+    <div class="sleep-timer-card running">
+      <div class="sleep-timer-info">
+        <div class="sleep-timer-label">Slaap loopt</div>
+        <div class="sleep-timer-time mono" id="sleep-timer-live">${activeSleepDuration(active.startMs)}</div>
+        <div class="sleep-timer-sub">gestart om ${fmtClock(active.startMs)}</div>
+      </div>
+      <button class="sleep-timer-btn stop" data-action="sleep-stop">${ICON.moon} Stop slaap</button>
+    </div>`;
+  }
+  return `
+  <div class="sleep-timer-card">
+    <div class="sleep-timer-info">
+      <div class="sleep-timer-label">Slaaptimer</div>
+      <div class="sleep-timer-sub">Start nu — loopt door op de achtergrond</div>
+    </div>
+    <button class="sleep-timer-btn start" data-action="sleep-start">${ICON.moon} Start slaap</button>
+  </div>`;
+}
 function renderReminderCard() {
   const c = reminderCountdown();
 
@@ -1521,6 +1651,8 @@ function renderReportView() {
   }));
   const periodLabel = from === to ? formatDateNice(from) : `${longDate(from)} – ${longDate(to)}`;
   const presets = [["dag","Dag"],["week","Week"],["maand","Maand"],["aangepast","Aangepast"]];
+  const cat = state.report.cat || "alles";
+  const cats = [["alles","Alles"],["voeding","Voeding"],["luiers","Luiers"],["slaap","Slaap"],["gezondheid","Gezondheid"]];
 
   return `
     <div class="report-controls">
@@ -1531,8 +1663,19 @@ function renderReportView() {
         <div class="field"><label>Van</label><input type="date" data-action="report-from" value="${from}"></div>
         <div class="field"><label>Tot</label><input type="date" data-action="report-to" value="${to}"></div>
       </div>
+      <div class="preset-row cat-row">
+        ${cats.map(([c,l])=>`<button class="preset-btn ${cat===c?'active':''}" data-action="report-cat" data-cat="${c}">${l}</button>`).join("")}
+      </div>
     </div>
 
+    ${cat === "alles" ? renderReportAll(dates, agg, denom, daysData, tMin, tMax, tAvg, lastGewicht, lastLengte, periodLabel) : renderReportCategory(cat, dates, periodLabel, daysData)}
+  `;
+}
+
+// Volledig rapport (alle categorieën) — de bestaande samenvatting + tabel + notities.
+function renderReportAll(dates, agg, denom, daysData, tMin, tMax, tAvg, lastGewicht, lastLengte, periodLabel) {
+  const from = state.report.from, to = state.report.to;
+  return `
     <div class="card">
       <div class="report-head">
         <div class="report-period">${periodLabel}</div>
@@ -1619,6 +1762,105 @@ function renderReportView() {
           </div>`).join("")}
       </div>
     </div>` : ""}
+
+    ${(() => {
+      // Alle notities uit voeding, luier, slaap en meting in de periode verzamelen
+      const notes = [];
+      dates.forEach((d,i) => {
+        const day = getDay(d);
+        const lbl = dates.length <= 8 ? DAG_LABELS[i] : shortDate(d);
+        day.feedings.forEach(e => { if (e.note) notes.push({ date:d, lbl, time:e.time||"", cat:"Voeding", color:"var(--feed)", text:e.note }); });
+        day.diapers.forEach(e => { if (e.note) notes.push({ date:d, lbl, time:e.time||"", cat:"Luier", color:"var(--diaper)", text:e.note }); });
+        day.sleeps.forEach(e => { if (e.note) notes.push({ date:d, lbl, time:e.start||"", cat:"Slaap", color:"var(--sleep)", text:e.note }); });
+        day.health.forEach(e => { if (e.note) notes.push({ date:d, lbl, time:e.time||"", cat:HEALTH_LABEL[e.type]||"Meting", color:"var(--health)", text:e.note }); });
+      });
+      if (!notes.length) return "";
+      notes.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+      return `
+      <div class="card">
+        <div class="section-title">Notities</div>
+        <div class="chart-sub">Alle notities in deze periode (${notes.length})</div>
+        <div class="sum-list">
+          ${notes.map(nt => `
+            <div class="sum-row">
+              <span class="sum-time mono">${nt.lbl}${nt.time ? " " + nt.time : ""}</span>
+              <span class="sum-dot" style="background:${nt.color}"></span>
+              <span class="sum-text"><strong>${nt.cat}:</strong> ${escapeHtml(nt.text)}</span>
+            </div>`).join("")}
+        </div>
+      </div>`;
+    })()}
+
+    <div class="report-actions">
+      <button class="report-btn-primary" data-action="report-print">${ICON.printer} Opslaan als PDF</button>
+      <button data-action="report-csv">${ICON.download} Exporteer voor Excel</button>
+    </div>
+  `;
+}
+
+// Gedetailleerd rapport voor één categorie, per dag gegroepeerd (incl. notities).
+function renderReportCategory(cat, dates, periodLabel, daysData) {
+  const titleMap = { voeding:"Voeding", luiers:"Luiers", slaap:"Slaap", gezondheid:"Gezondheid" };
+  const colorMap = { voeding:"var(--feed)", luiers:"var(--diaper)", slaap:"var(--sleep)", gezondheid:"var(--health)" };
+  const title = titleMap[cat] || "Rapport";
+  const color = colorMap[cat] || "var(--ink)";
+
+  // Bouwt de rijen (tijd + tekst) voor één dag en categorie.
+  function rowsFor(day) {
+    let items = [];
+    if (cat === "voeding") {
+      items = day.feedings.map(e => ({
+        time: e.time || "",
+        text: (e.type === "borst"
+          ? `Borst · L ${fmtDuration(Number(e.left)||0)} · R ${fmtDuration(Number(e.right)||0)}${e.side ? " · laatst " + (e.side==="links"?"L":"R") : ""}`
+          : `Fles · ${e.amount} ml`),
+        note: e.note || "",
+      }));
+    } else if (cat === "luiers") {
+      items = day.diapers.map(e => ({ time: e.time || "", text: DIAPER_LABEL[e.type] || "Luier", note: e.note || "" }));
+    } else if (cat === "slaap") {
+      items = day.sleeps.map(e => ({ time: e.start || "", text: `${e.start} – ${e.end} · ${fmtDuration(sleepMinutes(e))}`, note: e.note || "" }));
+    } else if (cat === "gezondheid") {
+      items = day.health.map(e => ({
+        time: e.time || "",
+        text: HEALTH_NUM[e.type] ? `${HEALTH_LABEL[e.type]} · ${e.value}${HEALTH_NUM[e.type].unit}` : `${HEALTH_LABEL[e.type]}${e.value ? " · " + escapeHtml(e.value) : ""}`,
+        note: e.note || "",
+      }));
+    }
+    items.sort((a,b)=>timeToMinutes(a.time||"0:0")-timeToMinutes(b.time||"0:0"));
+    return items;
+  }
+
+  // Tel totaal aantal registraties in de periode
+  let total = 0;
+  const blocks = dates.map((d,i) => {
+    const items = rowsFor(getDay(d));
+    if (!items.length) return "";
+    total += items.length;
+    return `
+      <div class="rep-day">
+        <div class="rep-day-head">${formatDateNice(d)}</div>
+        <div class="sum-list">
+          ${items.map(it => `
+            <div class="sum-row">
+              <span class="sum-time mono">${it.time || "–"}</span>
+              <span class="sum-dot" style="background:${color}"></span>
+              <span class="sum-text">${it.text}${it.note ? ` <span class="rep-note">— ${escapeHtml(it.note)}</span>` : ""}</span>
+            </div>`).join("")}
+        </div>
+      </div>`;
+  }).join("");
+
+  const body = total ? blocks : `<div class="empty-state">Geen ${title.toLowerCase()}-registraties in deze periode.</div>`;
+
+  return `
+    <div class="card">
+      <div class="report-head">
+        <div class="report-period">${title} — ${periodLabel}</div>
+        <div class="report-meta">${total} registratie${total===1?"":"s"} · ${dates.length} ${dates.length===1?'dag':'dagen'} · opgesteld ${formatDateNice(todayStr())}</div>
+      </div>
+      ${body}
+    </div>
 
     <div class="report-actions">
       <button class="report-btn-primary" data-action="report-print">${ICON.printer} Opslaan als PDF</button>
@@ -1998,6 +2240,10 @@ function onAction(ev) {
     else if (p === "maand") { const [f,t] = monthRange(ref); state.report.from = f; state.report.to = t; }
     render(); syncCurrentView();
   }
+  else if (action === "report-cat") {
+    state.report.cat = el.dataset.cat;
+    render();
+  }
   else if (action === "report-from") { state.report.from = el.value || todayStr(); state.report.preset = "aangepast"; render(); syncCurrentView(); }
   else if (action === "report-to") { state.report.to = el.value || todayStr(); state.report.preset = "aangepast"; render(); syncCurrentView(); }
   else if (action === "report-print") {
@@ -2028,6 +2274,30 @@ function onAction(ev) {
   }
   else if (action === "sync-resync") { syncCurrentView(); }
   else if (action === "open-modal") { state.editEntry = null; state.editAppt = null; state.modal = el.dataset.modal; render(); }
+  else if (action === "sleep-start") {
+    if (!getActiveSleep()) startActiveSleep();
+    render();
+  }
+  else if (action === "sleep-stop") {
+    const active = getActiveSleep();
+    if (!active) { render(); return; }
+    const startD = new Date(active.startMs);
+    const endD = new Date();
+    const startDate = dateToStr(startD);          // sla op op de dag waarop de slaap begon
+    const entry = {
+      id: uid(),
+      start: `${pad(startD.getHours())}:${pad(startD.getMinutes())}`,
+      end: `${pad(endD.getHours())}:${pad(endD.getMinutes())}`,
+      note: "",
+    };
+    const day = getDay(startDate);
+    day.sleeps.push(entry);
+    persistDay(startDate, { kind: "sleeps", entry });
+    clearActiveSleep();
+    // spring naar de dag van de slaap zodat de gebruiker het resultaat ziet
+    state.selectedDate = startDate;
+    render();
+  }
   else if (action === "close-modal") { resetBreastTimers(); state.editEntry = null; state.editAppt = null; state.modal = null; render(); }
   else if (action === "edit-entry") {
     const kind = el.dataset.kind, id = el.dataset.id;
@@ -2112,8 +2382,9 @@ function onAction(ev) {
     applyAppName();
     queueAppName(getAppName());
     const birth = document.getElementById("birth-input").value;
-    setBirthDate(birth);
-    queueBirthDate(getBirthDate() || "");
+    const ts = Date.now();
+    setBirthDate(birth, ts);
+    queueBirthDate(getBirthDate() || "", ts);
     state.modal = null; render();
   }
   else if (action === "breast-timer") {
@@ -2287,6 +2558,14 @@ function onAction(ev) {
 setInterval(() => {
   if (state.activeTab === "dag" && !state.modal) render();
 }, 60000);
+
+// Live slaapteller (elke seconde, enkel het cijfer bijwerken)
+setInterval(() => {
+  const el = document.getElementById("sleep-timer-live");
+  if (!el) return;
+  const active = getActiveSleep();
+  if (active) el.textContent = activeSleepDuration(active.startMs);
+}, 1000);
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && state.activeTab === "dag" && !state.modal) render();
