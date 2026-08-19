@@ -675,11 +675,11 @@ function lastFeedingDateTime() {
   }
   return best;
 }
-// Volgende kant bij borstvoeding = de andere dan de laatst gebruikte
+// Volgende kant bij borstvoeding = dezelfde als de laatst gebruikte
 function nextBreastSide() {
   const last = getLastBreastSide();
   if (!last || !last.side) return null;
-  return last.side === "links" ? "rechts" : "links";
+  return last.side;
 }
 // Berekent de countdown-status voor de kaart in "Vandaag"
 function reminderCountdown() {
@@ -1068,7 +1068,7 @@ function render() {
       <div class="tabs">
         <button class="tab-btn ${state.activeTab==='dag'?'active':''}" data-action="tab" data-tab="dag">Vandaag</button>
         <button class="tab-btn ${state.activeTab==='week'?'active':''}" data-action="tab" data-tab="week">Weekoverzicht</button>
-        <button class="tab-btn ${state.activeTab==='groei'?'active':''}" data-action="tab" data-tab="groei">Groei</button>
+        <button class="tab-btn ${state.activeTab==='groei'?'active':''}" data-action="tab" data-tab="groei">Metingen</button>
         <button class="tab-btn ${state.activeTab==='agenda'?'active':''}" data-action="tab" data-tab="agenda">Agenda</button>
         <button class="tab-btn ${state.activeTab==='rapport'?'active':''}" data-action="tab" data-tab="rapport">Rapport</button>
       </div>
@@ -1474,6 +1474,7 @@ function growthChart(points, opts) {
 function renderGroeiView() {
   const gew = allMeasurements("gewicht");
   const len = allMeasurements("lengte");
+  const temp = allMeasurements("temperatuur");
 
   const gewCard = gew.length ? `
     <div class="card">
@@ -1489,15 +1490,22 @@ function renderGroeiView() {
       ${growthChart(len, { unit:" cm", color:"var(--sleep)", pad:1.5, dec:1 })}
     </div>` : "";
 
-  const body = (gewCard + lenCard) || `
+  const tempCard = temp.length ? `
     <div class="card">
-      <div class="empty-state">Nog geen gewicht- of lengtemetingen. Voeg ze toe via ${'"'}+ Meting${'"'} op het Vandaag-scherm.</div>
+      <div class="section-title">Temperatuur</div>
+      <div class="chart-sub">Alle metingen — ${temp.length} meting${temp.length===1?"":"en"} · laatst ${temp[temp.length-1].value} °C</div>
+      ${growthChart(temp, { unit:" °C", color:"var(--health)", pad:0.5, dec:1 })}
+    </div>` : "";
+
+  const body = (gewCard + lenCard + tempCard) || `
+    <div class="card">
+      <div class="empty-state">Nog geen gewicht-, lengte- of temperatuurmetingen. Voeg ze toe via ${'"'}+ Meting${'"'} op het Vandaag-scherm.</div>
     </div>`;
 
   return `
     <div class="groei-head">
-      <div class="week-label" style="text-transform:none">Groeicurve</div>
-      <div class="chart-sub">Gewicht en lengte over de volledige periode</div>
+      <div class="week-label" style="text-transform:none">Metingen</div>
+      <div class="chart-sub">Gewicht, lengte en temperatuur over de volledige periode</div>
     </div>
     ${body}
   `;
