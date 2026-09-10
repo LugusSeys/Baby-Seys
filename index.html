@@ -190,6 +190,21 @@
   .sleep-timer-btn.start { background: var(--sleep); color: var(--surface); }
   .sleep-timer-btn.stop { background: var(--sleep); color: var(--surface); }
   .sleep-timer-btn:active { transform: scale(0.97); }
+
+  .checklist-card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+    padding: 14px 16px; margin-bottom: 18px; }
+  .checklist-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin-bottom: 10px; }
+  .checklist-items { display: flex; flex-wrap: wrap; gap: 10px; }
+  .checklist-item { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line);
+    background: var(--surface-soft); border-radius: 14px; padding: 10px 14px; cursor: pointer;
+    font-family: 'Figtree', sans-serif; font-size: 14px; font-weight: 600; color: var(--ink); }
+  .checklist-item:active { transform: scale(0.98); }
+  .checklist-item.done { background: var(--health-soft); border-color: var(--health); }
+  .checklist-box { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--ink-soft);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    background: var(--surface); color: var(--surface); }
+  .checklist-item.done .checklist-box { background: var(--health); border-color: var(--health); color: var(--surface); }
+  .checklist-item.done .checklist-label { text-decoration: line-through; color: var(--ink-soft); }
   .reminder-presets { display: flex; flex-wrap: wrap; gap: 7px; }
   .chip-btn { border: 1px solid var(--line); background: var(--surface-soft); color: var(--ink);
     border-radius: 999px; padding: 7px 13px; font-size: 13px; font-weight: 600; cursor: pointer;
@@ -318,7 +333,7 @@
     @page { margin: 14mm; }
     html, body { background: #fff !important; }
     .sync-btn, .tabs, .date-nav, .week-nav, .report-controls, .report-actions,
-    .storage-note, .quick-add, .stats-row, .reminder-card, .sleep-timer-card, .ribbon-title, .hgrid { display: none !important; }
+    .storage-note, .quick-add, .stats-row, .reminder-card, .sleep-timer-card, .checklist-card, .ribbon-title, .hgrid { display: none !important; }
     .top .tagline { display: block !important; }
     .shell { max-width: none; padding: 0; }
     .card { border: 1px solid #ccc; border-radius: 8px; box-shadow: none;
@@ -572,6 +587,30 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 }
 
+// ---------------- dagelijkse checklist ----------------
+// Uitbreidbaar: voeg hier items toe (id + label + optioneel icoon-emoji).
+const DAILY_CHECKLIST = [
+  { id: "vitd", label: "Vitamine D", emoji: "💊" },
+];
+function checklistKey(dateStr) { return "babyritme:checklist:" + dateStr; }
+function getChecklist(dateStr) {
+  try {
+    const raw = localStorage.getItem(checklistKey(dateStr));
+    return raw ? (JSON.parse(raw) || {}) : {};
+  } catch (e) { return {}; }
+}
+function setChecklist(dateStr, obj) {
+  localStorage.setItem(checklistKey(dateStr), JSON.stringify(obj || {}));
+}
+function isChecked(dateStr, id) { return !!getChecklist(dateStr)[id]; }
+function toggleChecklistItem(dateStr, id) {
+  const obj = getChecklist(dateStr);
+  if (obj[id]) delete obj[id]; else obj[id] = true;
+  setChecklist(dateStr, obj);
+  queueChecklist(dateStr, obj);
+  return obj;
+}
+
 // ---------------- storage (localStorage) ----------------
 const STORAGE_PREFIX = "babyritme:day:";
 function loadDay(dateStr) {
@@ -816,6 +855,30 @@ async function reconcileAppName() {
   } catch (e) { /* stil negeren */ }
 }
 
+// Dagelijkse checklist als gedeelde rij per dag (id "checklist:DATE").
+function checklistRowId(dateStr) { return "checklist:" + dateStr; }
+function queueChecklist(dateStr, obj) {
+  if (!SYNC.enabled) return;
+  outboxAdd({ op: "upsert", row: {
+    id: checklistRowId(dateStr), family_code: SYNC.code, date: dateStr,
+    kind: "settings", data: { key: "checklist", value: obj || {} },
+  }});
+  flushOutbox();
+}
+async function pullChecklist(dateStr) {
+  if (!SYNC.enabled) return;
+  try {
+    const rows = await sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&id=eq.${encodeURIComponent(checklistRowId(dateStr))}&select=data`);
+    if (rows && rows.length && rows[0].data && rows[0].data.value && typeof rows[0].data.value === "object") {
+      const cloud = rows[0].data.value;
+      if (JSON.stringify(cloud) !== JSON.stringify(getChecklist(dateStr))) {
+        setChecklist(dateStr, cloud);
+        if (!state.modal) render();
+      }
+    }
+  } catch (e) { /* stil negeren */ }
+}
+
 // Geboortedatum als gedeelde gezinsinstelling (zelfde principe als de naam).
 const BIRTH_ROW_ID = "settings:birthDate";
 function queueBirthDate(value, ts) {
@@ -955,11 +1018,12 @@ function syncCurrentView() {
   else if (state.activeTab === "rapport") { syncPull(state.report.from, state.report.to); }
   else if (state.activeTab === "groei") { syncPull(addDays(todayStr(), -400), todayStr()); }
   else if (state.activeTab === "agenda") { pullAppointments(); pullBirthDate(); pullAppName(); }
-  else { syncPull(state.selectedDate, state.selectedDate); }
+  else { syncPull(state.selectedDate, state.selectedDate); pullChecklist(todayStr()); }
 }
 
 // ---------------- icons (inline svg) ----------------
 const ICON = {
+  check: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 6.5"/></svg>`,
   droplet: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.7s6 7.2 6 11.3a6 6 0 1 1-12 0c0-4.1 6-11.3 6-11.3Z"/></svg>`,
   bottle: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v2.5L8.5 7A2 2 0 0 0 8 8.3V19a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8.3A2 2 0 0 0 15.5 7L14 5.5V3"/><path d="M8 11h8"/><path d="M8 14h4"/></svg>`,
   breast: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a8 8 0 0 1 16 0c0 5-3.6 9-8 9S4 14 4 9Z"/><circle cx="12" cy="10" r="1.6"/></svg>`,
@@ -1164,6 +1228,8 @@ function renderDagView() {
 
     ${renderReminderCard()}
 
+    ${renderChecklistCard()}
+
     ${renderSleepTimerCard()}
 
     <div class="quick-add">
@@ -1194,6 +1260,25 @@ function renderDagView() {
   `;
 }
 
+function renderChecklistCard() {
+  if (!DAILY_CHECKLIST.length) return "";
+  const today = todayStr();
+  const checked = getChecklist(today);
+  return `
+  <div class="checklist-card">
+    <div class="checklist-head">Dagelijks — ${formatDateNice(today)}</div>
+    <div class="checklist-items">
+      ${DAILY_CHECKLIST.map(it => {
+        const on = !!checked[it.id];
+        return `
+        <button class="checklist-item ${on ? "done" : ""}" data-action="toggle-checklist" data-id="${it.id}">
+          <span class="checklist-box">${on ? ICON.check : ""}</span>
+          <span class="checklist-label">${it.emoji ? it.emoji + " " : ""}${it.label}</span>
+        </button>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
 function renderSleepTimerCard() {
   const active = getActiveSleep();
   if (active) {
@@ -2295,6 +2380,10 @@ function onAction(ev) {
   }
   else if (action === "sync-resync") { syncCurrentView(); }
   else if (action === "open-modal") { state.editEntry = null; state.editAppt = null; state.modal = el.dataset.modal; render(); }
+  else if (action === "toggle-checklist") {
+    toggleChecklistItem(todayStr(), el.dataset.id);
+    render();
+  }
   else if (action === "sleep-start") {
     if (!getActiveSleep()) startActiveSleep();
     render();
