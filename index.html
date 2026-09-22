@@ -29,6 +29,8 @@
     --health-soft: #F3E6D9;
     --sleep: #52746D;
     --sleep-soft: #DAE5E1;
+    --note: #52746D;
+    --note-soft: #DAE5E1;
   }
   * { box-sizing: border-box; }
   html, body {
@@ -95,8 +97,6 @@
     width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--surface);
     box-shadow: 0 1px 3px rgba(0,0,0,0.15); cursor: default; }
   .ribbon-now { position: absolute; top: -5px; width: 2px; height: 16px; background: var(--ink); opacity: 0.5; }
-  .ribbon-sleep { position: absolute; top: 50%; transform: translateY(-50%); height: 12px;
-    background: var(--sleep-soft); border: 1px solid var(--sleep); border-radius: 6px; min-width: 3px; }
   .ribbon-ticks { display: flex; justify-content: space-between; margin-top: 8px;
     font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-soft); }
   .ribbon-empty { font-size: 13px; color: var(--ink-soft); font-style: italic; }
@@ -111,10 +111,7 @@
   .hgrid-row.now .hgrid-hour { color: var(--ink); font-weight: 700; }
   .hgrid-cells { flex: 1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
     align-content: center; border-radius: 12px; padding: 8px 6px; min-width: 0; }
-  .hgrid-row.sleeping .hgrid-cells { background: var(--sleep-soft); }
   .hgrid-row.now .hgrid-cells { outline: 2px solid var(--ink); outline-offset: -2px; }
-  .hgrid-sleeptag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px;
-    color: var(--sleep); font-weight: 600; }
   .hgrid-ev { display: inline-flex; align-items: center; gap: 6px; border: 1px solid;
     border-radius: 999px; padding: 5px 11px 5px 8px; cursor: pointer; font-family: 'Figtree', sans-serif; }
   .hgrid-ev:hover { filter: brightness(0.97); }
@@ -154,7 +151,7 @@
   .quick-btn.feed { color: var(--feed); }
   .quick-btn.diaper { color: var(--diaper); }
   .quick-btn.health { color: var(--health); }
-  .quick-btn.sleep { color: var(--sleep); }
+  .quick-btn.note { color: var(--note); }
 
   .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
   .stat-chip { background: var(--surface-soft); border: 1px solid var(--line); border-radius: 16px;
@@ -178,18 +175,6 @@
     font-family: 'Figtree', sans-serif; flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
   .reminder-btn:hover { background: var(--feed-soft); }
 
-  .sleep-timer-card { display: flex; align-items: center; gap: 14px; background: var(--sleep-soft);
-    border: 1px solid var(--sleep); border-radius: 20px; padding: 16px 18px; margin-bottom: 18px; }
-  .sleep-timer-card.running { border-width: 2px; }
-  .sleep-timer-info { flex: 1; min-width: 0; }
-  .sleep-timer-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); }
-  .sleep-timer-time { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; margin: 2px 0; line-height: 1.1; color: var(--ink); }
-  .sleep-timer-sub { font-size: 12.5px; color: var(--ink-soft); }
-  .sleep-timer-btn { border: none; border-radius: 14px; padding: 12px 18px; font-size: 14px; font-weight: 700;
-    cursor: pointer; font-family: 'Figtree', sans-serif; flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
-  .sleep-timer-btn.start { background: var(--sleep); color: var(--surface); }
-  .sleep-timer-btn.stop { background: var(--sleep); color: var(--surface); }
-  .sleep-timer-btn:active { transform: scale(0.97); }
 
   .checklist-card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
     padding: 14px 16px; margin-bottom: 18px; }
@@ -333,7 +318,7 @@
     @page { margin: 14mm; }
     html, body { background: #fff !important; }
     .sync-btn, .tabs, .date-nav, .week-nav, .report-controls, .report-actions,
-    .storage-note, .quick-add, .stats-row, .reminder-card, .sleep-timer-card, .checklist-card, .ribbon-title, .hgrid { display: none !important; }
+    .storage-note, .quick-add, .stats-row, .reminder-card, .checklist-card, .ribbon-title, .hgrid { display: none !important; }
     .top .tagline { display: block !important; }
     .shell { max-width: none; padding: 0; }
     .card { border: 1px solid #ccc; border-radius: 8px; box-shadow: none;
@@ -417,14 +402,8 @@ function formatDateNice(dateStr) {
 }
 const timeToMinutes = t => { const [h,m] = t.split(":").map(Number); return h*60+m; };
 const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
-const emptyDay = () => ({ feedings: [], diapers: [], health: [], sleeps: [] });
+const emptyDay = () => ({ feedings: [], diapers: [], health: [], notes: [], sleeps: [] });
 
-// slaapduur in minuten (over middernacht heen = positief)
-function sleepMinutes(s) {
-  let start = timeToMinutes(s.start), end = timeToMinutes(s.end);
-  if (end < start) end += 1440;
-  return end - start;
-}
 function fmtDuration(min) {
   const h = Math.floor(min/60), m = min%60;
   if (h && m) return `${h}u ${m}m`;
@@ -432,32 +411,6 @@ function fmtDuration(min) {
   return `${m}m`;
 }
 
-// ---------------- actieve (lopende) slaap ----------------
-// Blijft in localStorage staan, dus loopt door na refresh of app sluiten.
-const ACTIVE_SLEEP_KEY = "babyritme:activeSleep";
-function getActiveSleep() {
-  try {
-    const raw = localStorage.getItem(ACTIVE_SLEEP_KEY);
-    if (!raw) return null;
-    const o = JSON.parse(raw);
-    return (o && o.startMs) ? o : null;
-  } catch (e) { return null; }
-}
-function startActiveSleep() {
-  localStorage.setItem(ACTIVE_SLEEP_KEY, JSON.stringify({ startMs: Date.now() }));
-}
-function clearActiveSleep() {
-  localStorage.removeItem(ACTIVE_SLEEP_KEY);
-}
-function fmtClock(ms) {
-  const d = new Date(ms);
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-function activeSleepDuration(startMs) {
-  const sec = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
-  const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
-  return h ? `${h}u ${pad(m)}m ${pad(s)}s` : `${m}m ${pad(s)}s`;
-}
 
 // ---------------- rapport-helpers ----------------
 function datesBetween(from, to) {
@@ -483,7 +436,7 @@ function longDate(dateStr) {
 function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
 
 function aggregate(dates) {
-  const totals = { feedings:0, ml:0, borst:0, fles:0, borstMin:0, borstL:0, borstR:0, plas:0, poep:0, luiers:0, slaapMin:0, temps:[], otherHealth:[] };
+  const totals = { feedings:0, ml:0, borst:0, fles:0, borstMin:0, borstL:0, borstR:0, plas:0, poep:0, luiers:0, notities:0, temps:[], otherHealth:[] };
   const perDay = dates.map(date => {
     const day = getDay(date);
     const ml = day.feedings.filter(f=>f.type==="fles").reduce((s,f)=>s+(Number(f.amount)||0),0);
@@ -495,15 +448,15 @@ function aggregate(dates) {
     const borstMin = borstL + borstR;
     const plas = day.diapers.filter(x=>x.type==="plas"||x.type==="beide").length;
     const poep = day.diapers.filter(x=>x.type==="poep"||x.type==="beide").length;
-    const slaapMin = day.sleeps.reduce((s,x)=>s+sleepMinutes(x),0);
     const temps = day.health.filter(h=>h.type==="temperatuur"&&h.value!=="").map(h=>Number(h.value)).filter(v=>!isNaN(v));
     const otherHealth = day.health.filter(h=>!HEALTH_NUM[h.type]).map(h=>({date, time:h.time||"", type:h.type, value:h.value||"", note:h.note||""}));
     totals.feedings += day.feedings.length; totals.ml += ml; totals.borst += borst; totals.fles += fles;
     totals.borstMin += borstMin; totals.borstL += borstL; totals.borstR += borstR;
-    totals.plas += plas; totals.poep += poep; totals.luiers += day.diapers.length; totals.slaapMin += slaapMin;
+    totals.plas += plas; totals.poep += poep; totals.luiers += day.diapers.length;
+    totals.notities += (day.notes || []).length;
     totals.temps = totals.temps.concat(temps);
     totals.otherHealth = totals.otherHealth.concat(otherHealth);
-    return { date, feedings: day.feedings.length, ml, borst, fles, borstMin, borstL, borstR, plas, poep, luiers: day.diapers.length, slaapMin, temps, otherHealth };
+    return { date, feedings: day.feedings.length, ml, borst, fles, borstMin, borstL, borstR, plas, poep, luiers: day.diapers.length, notities: (day.notes || []).length, temps, otherHealth };
   });
   return { perDay, ...totals };
 }
@@ -531,11 +484,11 @@ function exportReportCsv() {
           rows.push([d, e.time||"", DIAPER_LABEL[e.type]||e.type, (e.note||"")]);
         });
         head = ["Datum","Tijd","Type","Notitie"];
-      } else if (cat === "slaap") {
-        day.sleeps.slice().sort((a,b)=>timeToMinutes(a.start||"0:0")-timeToMinutes(b.start||"0:0")).forEach(e => {
-          rows.push([d, e.start||"", e.end||"", sleepMinutes(e), (e.note||"")]);
+      } else if (cat === "notities") {
+        (day.notes || []).slice().sort((a,b)=>timeToMinutes(a.time||"0:0")-timeToMinutes(b.time||"0:0")).forEach(e => {
+          rows.push([d, e.time||"", (e.note||"")]);
         });
-        head = ["Datum","Start","Einde","Duur (min)","Notitie"];
+        head = ["Datum","Tijd","Notitie"];
       } else if (cat === "gezondheid") {
         day.health.slice().sort((a,b)=>timeToMinutes(a.time||"0:0")-timeToMinutes(b.time||"0:0")).forEach(e => {
           rows.push([d, e.time||"", HEALTH_LABEL[e.type]||e.type, (e.value||""), HEALTH_NUM[e.type]?HEALTH_NUM[e.type].unit:"", (e.note||"")]);
@@ -556,14 +509,14 @@ function exportReportCsv() {
   }
 
   const agg = aggregate(dates);
-  const head = ["Datum","Voedingen","ml (fles)","Borstvoedingen","Borst minuten","Borst links (min)","Borst rechts (min)","Flesvoedingen","Luiers","Pipi","Kaka","Slaap (min)","Temp gemiddeld","Temp metingen","Andere metingen"];
+  const head = ["Datum","Voedingen","ml (fles)","Borstvoedingen","Borst minuten","Borst links (min)","Borst rechts (min)","Flesvoedingen","Luiers","Pipi","Kaka","Temp gemiddeld","Temp metingen","Andere metingen"];
   const rows = [head];
   agg.perDay.forEach(d => {
     const t = d.temps.length ? avg(d.temps).toFixed(1) : "";
-    rows.push([d.date, d.feedings, d.ml, d.borst, d.borstMin, d.borstL, d.borstR, d.fles, d.luiers, d.plas, d.poep, d.slaapMin, t, d.temps.length, d.otherHealth.length]);
+    rows.push([d.date, d.feedings, d.ml, d.borst, d.borstMin, d.borstL, d.borstR, d.fles, d.luiers, d.plas, d.poep, t, d.temps.length, d.otherHealth.length]);
   });
   const tAll = agg.temps.length ? avg(agg.temps).toFixed(1) : "";
-  rows.push(["TOTAAL", agg.feedings, agg.ml, agg.borst, agg.borstMin, agg.borstL, agg.borstR, agg.fles, agg.luiers, agg.plas, agg.poep, agg.slaapMin, tAll, agg.temps.length, agg.otherHealth.length]);
+  rows.push(["TOTAAL", agg.feedings, agg.ml, agg.borst, agg.borstMin, agg.borstL, agg.borstR, agg.fles, agg.luiers, agg.plas, agg.poep, tAll, agg.temps.length, agg.otherHealth.length]);
   const csv = "\uFEFF" + rows.map(r => r.join(";")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
@@ -587,10 +540,63 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 }
 
+// ---------------- eenmalige migratie: meting "Anders" wordt een notitie ----------------
+// De metingsoort "Anders" bestaat niet meer. Wat er zo geregistreerd stond, hoort thuis
+// bij de losse notities. Draait één keer per toestel (vlag in localStorage) en is veilig
+// als twee toestellen het allebei doen: het nieuwe notitie-id wordt afgeleid van het oude,
+// dus beide komen op hetzelfde id uit en de cloud-upsert overschrijft in plaats van te
+// verdubbelen. De oude meting-rij wordt ook in de cloud verwijderd.
+const MIGRATIE_ANDERS = "babyritme:migratie:anders-naar-notitie";
+
+// Zet elke "anders"-meting in één dagobject om naar een notitie. Draait overal waar een
+// dag binnenkomt (uit localStorage én uit de cloud), zodat een registratie die later
+// alsnog binnenwaait ook omgezet wordt. Geeft true terug als er iets veranderd is.
+// Het notitie-id wordt afgeleid van het oude id, dus herhaald uitvoeren verdubbelt niets.
+function andersNaarNotitie(day, dateStr, syncOok) {
+  if (!day || !Array.isArray(day.health)) return false;
+  const anders = day.health.filter(h => h && h.type === "anders");
+  if (!anders.length) return false;
+  day.notes = Array.isArray(day.notes) ? day.notes : [];
+  day.health = day.health.filter(h => !(h && h.type === "anders"));
+  anders.forEach(h => {
+    const tekst = [String(h.value || "").trim(), String(h.note || "").trim()].filter(Boolean).join(" · ");
+    const entry = { id: (h.id || uid()) + "-n", time: h.time || "00:00", note: tekst || "Notitie" };
+    if (!day.notes.some(n => n && n.id === entry.id)) day.notes.push(entry);
+    if (syncOok && dateStr) { queuePush(dateStr, "notes", entry); if (h.id) queueDelete(h.id); }
+  });
+  day.notes.sort((a, b) => timeToMinutes(a.time || "0:0") - timeToMinutes(b.time || "0:0"));
+  return true;
+}
+function migreerAndersNaarNotitie() {
+  try {
+    if (localStorage.getItem(MIGRATIE_ANDERS)) return 0;
+  } catch (e) { return 0; }
+  let verplaatst = 0;
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(STORAGE_PREFIX)) keys.push(k);
+  }
+  keys.forEach(k => {
+    const dateStr = k.slice(STORAGE_PREFIX.length);
+    let day;
+    try { day = JSON.parse(localStorage.getItem(k)); } catch (e) { return; }
+    if (!day || !Array.isArray(day.health)) return;
+    const aantal = day.health.filter(h => h && h.type === "anders").length;
+    if (!andersNaarNotitie(day, dateStr, true)) return;
+    verplaatst += aantal;
+    try { localStorage.setItem(k, JSON.stringify(day)); } catch (e) { /* vol geheugen negeren */ }
+    delete state.days[dateStr];
+  });
+  try { localStorage.setItem(MIGRATIE_ANDERS, String(Date.now())); } catch (e) {}
+  return verplaatst;
+}
+
 // ---------------- dagelijkse checklist ----------------
 // Uitbreidbaar: voeg hier items toe (id + label + optioneel icoon-emoji).
 const DAILY_CHECKLIST = [
   { id: "vitd", label: "Vitamine D", emoji: "💊" },
+  { id: "bactiol", label: "Bactiol", emoji: "💧" },
 ];
 function checklistKey(dateStr) { return "babyritme:checklist:" + dateStr; }
 function getChecklist(dateStr) {
@@ -616,7 +622,12 @@ const STORAGE_PREFIX = "babyritme:day:";
 function loadDay(dateStr) {
   try {
     const raw = localStorage.getItem(STORAGE_PREFIX + dateStr);
-    if (raw) return { ...emptyDay(), ...JSON.parse(raw) };
+    if (raw) {
+      const day = { ...emptyDay(), ...JSON.parse(raw) };
+      // Oude "anders"-metingen alsnog omzetten, ook als ze pas later zijn binnengekomen.
+      if (andersNaarNotitie(day, dateStr, true)) saveDay(dateStr, day);
+      return day;
+    }
   } catch (e) { /* corrupte data negeren */ }
   return emptyDay();
 }
@@ -734,7 +745,7 @@ function reminderCountdown() {
 
 // ---------------- sync (Supabase) ----------------
 const SYNC = { code: null, enabled: false, pulling: false, lastStatus: "off" };
-const KINDS = ["feedings", "diapers", "health", "sleeps"];
+const KINDS = ["feedings", "diapers", "health", "notes"];
 
 function initSync() {
   SYNC.code = localStorage.getItem("babyritme:family") || null;
@@ -1005,7 +1016,11 @@ async function syncPull(from, to) {
       const arr = byDate[r.date][r.kind];
       if (arr) arr.push(r.data);
     });
-    Object.keys(byDate).forEach(d => { state.days[d] = byDate[d]; saveDay(d, byDate[d]); });
+    Object.keys(byDate).forEach(d => {
+      // Een "anders"-meting die van een toestel met de oude versie komt, meteen omzetten.
+      andersNaarNotitie(byDate[d], d, true);
+      state.days[d] = byDate[d]; saveDay(d, byDate[d]);
+    });
     setStatus("ok");
     if (!state.modal) render();
   } catch (e) { setStatus("offline"); }
@@ -1018,7 +1033,7 @@ function syncCurrentView() {
   else if (state.activeTab === "rapport") { syncPull(state.report.from, state.report.to); }
   else if (state.activeTab === "groei") { syncPull(addDays(todayStr(), -400), todayStr()); }
   else if (state.activeTab === "agenda") { pullAppointments(); pullBirthDate(); pullAppName(); }
-  else { syncPull(state.selectedDate, state.selectedDate); pullChecklist(todayStr()); }
+  else { syncPull(state.selectedDate, state.selectedDate); pullChecklist(state.selectedDate); }
 }
 
 // ---------------- icons (inline svg) ----------------
@@ -1049,15 +1064,15 @@ const ICON = {
   plus: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>`,
   extlink: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>`,
 };
-function kindColor(kind) { return kind === "feedings" ? "var(--feed)" : kind === "diapers" ? "var(--diaper)" : kind === "sleeps" ? "var(--sleep)" : "var(--health)"; }
-function kindSoft(kind) { return kind === "feedings" ? "var(--feed-soft)" : kind === "diapers" ? "var(--diaper-soft)" : kind === "sleeps" ? "var(--sleep-soft)" : "var(--health-soft)"; }
+function kindColor(kind) { return kind === "feedings" ? "var(--feed)" : kind === "diapers" ? "var(--diaper)" : kind === "notes" ? "var(--note)" : "var(--health)"; }
+function kindSoft(kind) { return kind === "feedings" ? "var(--feed-soft)" : kind === "diapers" ? "var(--diaper-soft)" : kind === "notes" ? "var(--note-soft)" : "var(--health-soft)"; }
 const HEALTH_ICON = { temperatuur: "thermo", gewicht: "scale", lengte: "ruler", gedrag: "smiley", anders: "note" };
 const HEALTH_EMOJI = { temperatuur: "🌡", gewicht: "⚖️", lengte: "📏", gedrag: "🙂", anders: "📝" };
 function kindIcon(e) {
   const kind = e.kind || e;
   if (kind === "feedings") return (e.type === "borst") ? ICON.breast : ICON.bottle;
   if (kind === "diapers") return ICON.diaper;
-  if (kind === "sleeps") return ICON.moon;
+  if (kind === "notes") return ICON.note;
   return ICON[HEALTH_ICON[e.type] || "thermo"];
 }
 function kindIconSmall(e) {
@@ -1066,7 +1081,7 @@ function kindIconSmall(e) {
   if (kind === "feedings") return (e.type === "borst") ? "🤱" : "🍼";
   if (kind === "diapers") return ICON.diaper;
   if (kind === "health") return HEALTH_EMOJI[e.type] || "🌡";
-  if (kind === "sleeps") return "🌙";
+  if (kind === "notes") return "📝";
   return "•";
 }
 function labelFor(e, dateStr) {
@@ -1080,7 +1095,7 @@ function labelFor(e, dateStr) {
     return `${FEED_LABEL[e.type]} · ${e.amount} ml`;
   }
   if (e.kind === "diapers") return DIAPER_LABEL[e.type];
-  if (e.kind === "sleeps") return `Slaap · ${fmtDuration(sleepMinutes(e))}`;
+  if (e.kind === "notes") return "Notitie";
   if (HEALTH_NUM[e.type]) {
     const pc = pctLabel(e.type, dateStr, e.value);
     return `${HEALTH_LABEL[e.type]} · ${e.value}${HEALTH_NUM[e.type].unit}${pc ? " · " + pc : ""}`;
@@ -1088,10 +1103,6 @@ function labelFor(e, dateStr) {
   return `${HEALTH_LABEL[e.type]}${e.value ? " · " + escapeHtml(e.value) : ""}`;
 }
 function entrySub(e) {
-  if (e.kind === "sleeps") {
-    const range = `${e.start} – ${e.end}`;
-    return e.note ? `${range} · ${escapeHtml(e.note)}` : range;
-  }
   return e.note ? escapeHtml(e.note) : "";
 }
 
@@ -1099,8 +1110,8 @@ function entrySub(e) {
 const state = {
   selectedDate: todayStr(),
   activeTab: "dag",
-  days: {},          // dateStr -> {feedings, diapers, health, sleeps}
-  modal: null,       // 'voeding' | 'luier' | 'slaap' | 'meting' | null
+  days: {},          // dateStr -> {feedings, diapers, health}
+  modal: null,       // 'voeding' | 'luier' | 'meting' | null
   editEntry: null,   // de te bewerken registratie (of null bij nieuwe)
   appointments: [],  // agenda-afspraken {id, date, time, title, note}
   editAppt: null,    // de te bewerken afspraak (of null bij nieuwe)
@@ -1154,14 +1165,13 @@ function renderDagView() {
   const entries = [
     ...day.feedings.map(e => ({...e, kind:"feedings"})),
     ...day.diapers.map(e => ({...e, kind:"diapers"})),
-    ...day.sleeps.map(e => ({...e, kind:"sleeps", time: e.start})),
     ...day.health.map(e => ({...e, kind:"health"})),
+    ...day.notes.map(e => ({...e, kind:"notes"})),
   ].sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
 
   const totalMl = day.feedings.filter(f=>f.type==="fles").reduce((s,f)=>s+(Number(f.amount)||0),0);
   const borstFeeds = day.feedings.filter(f=>f.type==="borst");
   const totalBorstMin = borstFeeds.reduce((s,f)=>s+(Number(f.left)||0)+(Number(f.right)||0),0);
-  const totalSleep = day.sleeps.reduce((s,x)=>s+sleepMinutes(x),0);
   const isToday = state.selectedDate === todayStr();
   const nowMinutes = timeToMinutes(nowTimeStr());
   const lastBorst = borstFeeds.filter(f=>f.side).sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time)).pop();
@@ -1184,32 +1194,21 @@ function renderDagView() {
           // id van de laatste voeding van de dag (laatste in tijd)
           const feedsSorted = day.feedings.slice().sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
           const lastFeedId = feedsSorted.length ? feedsSorted[feedsSorted.length-1].id : null;
-          // slaapsessie die dit uur overlapt (of null)
-          const sleepAtHour = (h) => day.sleeps.find(s => {
-            const a = timeToMinutes(s.start); let b = timeToMinutes(s.end);
-            if (b <= a) b = 1440;
-            return a < (h+1)*60 && b > h*60;
-          }) || null;
           const evByHour = {};
-          entries.filter(e => e.kind !== "sleeps").forEach(e => {
+          entries.forEach(e => {
             const h = Math.floor(timeToMinutes(e.time)/60);
             (evByHour[h] = evByHour[h] || []).push(e);
           });
-          // welke uren tonen we: uren met gebeurtenissen, uren met slaap, en het huidige uur
+          // welke uren tonen we: uren met gebeurtenissen en het huidige uur
           const show = new Set();
-          for (let h=0; h<24; h++) if (evByHour[h] || sleepAtHour(h) || h===nowHour) show.add(h);
+          for (let h=0; h<24; h++) if (evByHour[h] || h===nowHour) show.add(h);
           const rows = [...show].sort((a,b)=>a-b);
           return `<div class="hgrid">
             ${rows.map(h => {
-              const sleep = sleepAtHour(h);
               const evs = (evByHour[h]||[]).sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
-              return `<div class="hgrid-row ${h===nowHour ? "now" : ""} ${sleep ? "sleeping" : ""}">
+              return `<div class="hgrid-row ${h===nowHour ? "now" : ""}">
                 <div class="hgrid-hour">${pad(h)}u</div>
                 <div class="hgrid-cells">
-                  ${sleep ? `<button class="hgrid-ev sleep" data-action="goto-entry" data-id="${sleep.id}" title="Slaap ${sleep.start} – ${sleep.end}" style="border-color:var(--sleep); background:var(--sleep-soft)">
-                      <span class="hgrid-ev-ic" style="color:var(--sleep)">${kindIconSmall("sleeps")}</span>
-                      <span class="hgrid-ev-time">slaap</span>
-                    </button>` : ""}
                   ${evs.map(e => `<button class="hgrid-ev ${e.id===lastFeedId ? "last-feed" : ""}" data-action="goto-entry" data-id="${e.id}" title="${e.id===lastFeedId ? "Laatste voeding · " : ""}${escapeHtml(labelFor(e, state.selectedDate))}" style="border-color:${kindColor(e.kind)}; background:${kindSoft(e.kind)}">
                       <span class="hgrid-ev-ic" style="color:${kindColor(e.kind)}">${kindIconSmall(e)}</span>
                       <span class="hgrid-ev-time">${e.time}</span>
@@ -1226,20 +1225,17 @@ function renderDagView() {
       <button class="stat-chip" data-action="day-summary" data-cat="feedings"><span class="num mono">${fmtDuration(totalBorstMin)}</span><span class="lbl">borst${lastSide ? " · laatst " + (lastSide.side === "links" ? "L" : "R") : ""}</span></button>
       <button class="stat-chip" data-action="day-summary" data-cat="feedings"><span class="num mono">${totalMl}</span><span class="lbl">ml fles</span></button>
       <button class="stat-chip" data-action="day-summary" data-cat="diapers"><span class="num mono">${day.diapers.length}</span><span class="lbl">luier${day.diapers.length === 1 ? "" : "s"}</span></button>
-      <button class="stat-chip" data-action="day-summary" data-cat="sleeps"><span class="num mono">${totalSleep ? fmtDuration(totalSleep) : "0m"}</span><span class="lbl">slaap</span></button>
     </div>
 
     ${renderReminderCard()}
 
     ${renderChecklistCard()}
 
-    ${renderSleepTimerCard()}
-
     <div class="quick-add">
       <button class="quick-btn feed" data-action="open-modal" data-modal="voeding">${ICON.droplet}<span>+ Voeding</span></button>
       <button class="quick-btn diaper" data-action="open-modal" data-modal="luier">${ICON.circle}<span>+ Luier</span></button>
-      <button class="quick-btn sleep" data-action="open-modal" data-modal="slaap">${ICON.moon}<span>+ Slaap</span></button>
       <button class="quick-btn health" data-action="open-modal" data-modal="meting">${ICON.vitals}<span>+ Meting</span></button>
+      <button class="quick-btn note" data-action="open-modal" data-modal="notitie">${ICON.note}<span>+ Notitie</span></button>
     </div>
 
     <div class="card">
@@ -1265,7 +1261,9 @@ function renderDagView() {
 
 function renderChecklistCard() {
   if (!DAILY_CHECKLIST.length) return "";
-  const today = todayStr();
+  // De checklist hoort bij de dag die je bekijkt, niet bij vandaag: een dag die je
+  // afvinkt blijft afgevinkt als je later terugbladert, en elke nieuwe dag begint leeg.
+  const today = state.selectedDate;
   const checked = getChecklist(today);
   return `
   <div class="checklist-card">
@@ -1280,28 +1278,6 @@ function renderChecklistCard() {
         </button>`;
       }).join("")}
     </div>
-  </div>`;
-}
-function renderSleepTimerCard() {
-  const active = getActiveSleep();
-  if (active) {
-    return `
-    <div class="sleep-timer-card running">
-      <div class="sleep-timer-info">
-        <div class="sleep-timer-label">Slaap loopt</div>
-        <div class="sleep-timer-time mono" id="sleep-timer-live">${activeSleepDuration(active.startMs)}</div>
-        <div class="sleep-timer-sub">gestart om ${fmtClock(active.startMs)}</div>
-      </div>
-      <button class="sleep-timer-btn stop" data-action="sleep-stop">${ICON.moon} Stop slaap</button>
-    </div>`;
-  }
-  return `
-  <div class="sleep-timer-card">
-    <div class="sleep-timer-info">
-      <div class="sleep-timer-label">Slaaptimer</div>
-      <div class="sleep-timer-sub">Start nu — loopt door op de achtergrond</div>
-    </div>
-    <button class="sleep-timer-btn start" data-action="sleep-start">${ICON.moon} Start slaap</button>
   </div>`;
 }
 function renderReminderCard() {
@@ -1415,7 +1391,7 @@ function renderAgendaView() {
 function samenvattingModal() {
   const day = getDay(state.selectedDate);
   const cat = state.summaryCat || "feedings";
-  const titel = cat === "feedings" ? "Voedingen" : cat === "diapers" ? "Luiers" : "Slaap";
+  const titel = cat === "feedings" ? "Voedingen" : "Luiers";
   const dagLabel = formatDateNice(state.selectedDate);
 
   const rij = (tijd, tekst, kleur) => `
@@ -1454,14 +1430,6 @@ function samenvattingModal() {
     totalen = `
       <div class="sum-tot"><span>${dp.length}</span> luiers</div>
       <div class="sum-tot">pipi ${plas}× · kaka ${poep}× · pipi+kaka ${beide}×</div>`;
-  } else {
-    const sl = [...day.sleeps].sort((a,b)=>timeToMinutes(a.start)-timeToMinutes(b.start));
-    const totMin = sl.reduce((s,x)=>s+sleepMinutes(x),0);
-    body = sl.length ? sl.map(x => rij(x.start + "–" + x.end, `${fmtDuration(sleepMinutes(x))}${x.note ? " · " + escapeHtml(x.note) : ""}`, "var(--sleep)")).join("")
-      : `<div class="sum-empty">Nog geen slaap geregistreerd vandaag.</div>`;
-    totalen = `
-      <div class="sum-tot"><span>${fmtDuration(totMin)}</span> slaap totaal</div>
-      <div class="sum-tot">${sl.length} ${sl.length === 1 ? "sessie" : "sessies"}</div>`;
   }
 
   return `
@@ -1871,11 +1839,9 @@ function renderWeekView() {
     const lenMeas = day.health.filter(h=>h.type==="lengte" && h.value!=="").map(h=>Number(h.value)).filter(v=>!isNaN(v));
     const gewicht = gewMeas.length ? gewMeas[gewMeas.length-1] : null; // laatste meting van de dag
     const lengte = lenMeas.length ? lenMeas[lenMeas.length-1] : null;
-    const slaapMin = day.sleeps.reduce((s,x)=>s+sleepMinutes(x),0);
     return {
       date: d, label: DAG_LABELS[i], ml: totalMl, borstMin, borstL, borstR,
       voedingen: day.feedings.length, plas, poep, beide, luiers: day.diapers.length,
-      slaapMin, slaapU: Math.round(slaapMin/60*10)/10,
       temp: avgTemp !== null ? Math.round(avgTemp*10)/10 : null,
       gewicht, lengte,
     };
@@ -1888,8 +1854,7 @@ function renderWeekView() {
   const totalBorstLWeek = chartData.reduce((s,d)=>s+d.borstL,0);
   const totalBorstRWeek = chartData.reduce((s,d)=>s+d.borstR,0);
   const totalDiapers = chartData.reduce((s,d)=>s+d.luiers,0);
-  const totalSleepWeek = chartData.reduce((s,d)=>s+d.slaapMin,0);
-  const daysWithData = chartData.filter(d=>d.voedingen>0||d.luiers>0||d.slaapMin>0).length || 1;
+  const daysWithData = chartData.filter(d=>d.voedingen>0||d.luiers>0).length || 1;
   const hasBorst = chartData.some(d => d.borstMin > 0);
   const hasFles = chartData.some(d => d.ml > 0);
   const hasGewicht = chartData.some(d => d.gewicht !== null);
@@ -1907,7 +1872,6 @@ function renderWeekView() {
       <div class="summary-card"><div class="num mono">${fmtDuration(totalBorstMinWeek)}</div><div class="lbl">borst totaal</div>${totalBorstMinWeek ? `<div class="sub">L ${fmtDuration(totalBorstLWeek)} · R ${fmtDuration(totalBorstRWeek)}</div>` : ""}</div>
       <div class="summary-card"><div class="num mono">${totalMlWeek} ml</div><div class="lbl">fles totaal</div></div>
       <div class="summary-card"><div class="num mono">${totalDiapers}</div><div class="lbl">luiers</div></div>
-      <div class="summary-card"><div class="num mono">${totalSleepWeek ? fmtDuration(totalSleepWeek) : "0m"}</div><div class="lbl">slaap totaal</div></div>
     </div>
 
     ${hasBorst ? `
@@ -1923,12 +1887,6 @@ function renderWeekView() {
       <div class="chart-sub">Totale hoeveelheid melk per fles per dag deze week</div>
       ${barChart(chartData, [{key:"ml", color:"var(--feed)"}], v => v + " ml")}
     </div>` : ""}
-
-    <div class="card">
-      <div class="section-title">Slaap per dag (uren)</div>
-      <div class="chart-sub">Totale slaaptijd per dag deze week</div>
-      ${barChart(chartData, [{key:"slaapU", color:"var(--sleep)"}], v => v + " u")}
-    </div>
 
     <div class="card">
       <div class="section-title">Luiers per dag</div>
@@ -1987,7 +1945,7 @@ function renderReportView() {
   const { from, to, preset } = state.report;
   const dates = datesBetween(from, to);
   const agg = aggregate(dates);
-  const daysData = agg.perDay.filter(d => d.feedings>0||d.luiers>0||d.slaapMin>0||d.temps.length>0).length;
+  const daysData = agg.perDay.filter(d => d.feedings>0||d.luiers>0||d.temps.length>0).length;
   const denom = daysData || 1;
   const tMin = agg.temps.length ? Math.min(...agg.temps) : null;
   const tMax = agg.temps.length ? Math.max(...agg.temps) : null;
@@ -2001,7 +1959,7 @@ function renderReportView() {
   const periodLabel = from === to ? formatDateNice(from) : `${longDate(from)} – ${longDate(to)}`;
   const presets = [["dag","Dag"],["week","Week"],["maand","Maand"],["aangepast","Aangepast"]];
   const cat = state.report.cat || "alles";
-  const cats = [["alles","Alles"],["voeding","Voeding"],["luiers","Luiers"],["slaap","Slaap"],["gezondheid","Gezondheid"]];
+  const cats = [["alles","Alles"],["voeding","Voeding"],["luiers","Luiers"],["gezondheid","Gezondheid"],["notities","Notities"]];
 
   return `
     <div class="report-controls">
@@ -2037,15 +1995,15 @@ function renderReportAll(dates, agg, denom, daysData, tMin, tMax, tAvg, lastGewi
           <div class="rep-main">${agg.feedings} voedingen · ${fmtDuration(agg.borstMin)} borst · ${agg.ml} ml fles</div>
           <div class="rep-detail">gem. ${(agg.feedings/denom).toFixed(1)}/dag · ${fmtDuration(Math.round(agg.borstMin/denom))} borst/dag · ${Math.round(agg.ml/denom)} ml fles/dag<br>borst ${agg.borst}× (L ${fmtDuration(agg.borstL)} · R ${fmtDuration(agg.borstR)}) · fles ${agg.fles}×</div>
         </div>
-        <div class="rep-block" style="border-left-color:var(--sleep)">
-          <div class="rep-lbl">Slaap</div>
-          <div class="rep-main">${agg.slaapMin ? fmtDuration(agg.slaapMin) : "0m"} totaal</div>
-          <div class="rep-detail">gem. ${agg.slaapMin ? fmtDuration(Math.round(agg.slaapMin/denom)) : "0m"} per dag</div>
-        </div>
         <div class="rep-block" style="border-left-color:var(--diaper)">
           <div class="rep-lbl">Luiers</div>
           <div class="rep-main">${agg.luiers} totaal</div>
           <div class="rep-detail">${agg.plas} pipi · ${agg.poep} kaka<br>gem. ${(agg.luiers/denom).toFixed(1)} per dag</div>
+        </div>
+        <div class="rep-block" style="border-left-color:var(--note)">
+          <div class="rep-lbl">Notities</div>
+          <div class="rep-main">${agg.notities} ${agg.notities===1?"notitie":"notities"}</div>
+          <div class="rep-detail">gem. ${(agg.notities/denom).toFixed(1)} per dag</div>
         </div>
         <div class="rep-block" style="border-left-color:var(--health)">
           <div class="rep-lbl">Gezondheid</div>
@@ -2076,7 +2034,7 @@ function renderReportAll(dates, agg, denom, daysData, tMin, tMax, tAvg, lastGewi
       ${dates.length > 62
         ? `<div class="empty-state">Kies een kortere periode (max. ~2 maanden) voor de dagtabel. De samenvatting en CSV-export werken wel voor langere periodes.</div>`
         : `<div class="report-table-wrap"><table class="report-table">
-        <thead><tr><th>Datum</th><th>Voed.</th><th>Borst (min)</th><th>Borst L/R</th><th>ml fles</th><th>Luiers</th><th>Pipi/kaka</th><th>Slaap</th><th>Temp</th></tr></thead>
+        <thead><tr><th>Datum</th><th>Voed.</th><th>Borst (min)</th><th>Borst L/R</th><th>ml fles</th><th>Luiers</th><th>Pipi/kaka</th><th>Temp</th></tr></thead>
         <tbody>
           ${agg.perDay.map(d => `<tr>
             <td>${shortDate(d.date)}</td>
@@ -2086,12 +2044,11 @@ function renderReportAll(dates, agg, denom, daysData, tMin, tMax, tAvg, lastGewi
             <td>${d.ml||"–"}</td>
             <td>${d.luiers||"–"}</td>
             <td>${d.plas}/${d.poep}</td>
-            <td>${d.slaapMin ? fmtDuration(d.slaapMin) : "–"}</td>
             <td>${d.temps.length ? avg(d.temps).toFixed(1)+"°" : "–"}</td>
           </tr>`).join("")}
           <tr class="total-row">
             <td>Totaal</td><td>${agg.feedings}</td><td>${agg.borstMin}</td><td>${agg.borstMin ? agg.borstL+"/"+agg.borstR : "–"}</td><td>${agg.ml}</td><td>${agg.luiers}</td>
-            <td>${agg.plas}/${agg.poep}</td><td>${agg.slaapMin?fmtDuration(agg.slaapMin):"–"}</td>
+            <td>${agg.plas}/${agg.poep}</td>
             <td>${agg.temps.length?avg(agg.temps).toFixed(1)+"°":"–"}</td>
           </tr>
         </tbody>
@@ -2113,15 +2070,15 @@ function renderReportAll(dates, agg, denom, daysData, tMin, tMax, tAvg, lastGewi
     </div>` : ""}
 
     ${(() => {
-      // Alle notities uit voeding, luier, slaap en meting in de periode verzamelen
+      // Alle notities uit voeding, luier, meting en losse notities in de periode verzamelen
       const notes = [];
       dates.forEach((d,i) => {
         const day = getDay(d);
         const lbl = dates.length <= 8 ? DAG_LABELS[i] : shortDate(d);
         day.feedings.forEach(e => { if (e.note) notes.push({ date:d, lbl, time:e.time||"", cat:"Voeding", color:"var(--feed)", text:e.note }); });
         day.diapers.forEach(e => { if (e.note) notes.push({ date:d, lbl, time:e.time||"", cat:"Luier", color:"var(--diaper)", text:e.note }); });
-        day.sleeps.forEach(e => { if (e.note) notes.push({ date:d, lbl, time:e.start||"", cat:"Slaap", color:"var(--sleep)", text:e.note }); });
         day.health.forEach(e => { if (e.note) notes.push({ date:d, lbl, time:e.time||"", cat:HEALTH_LABEL[e.type]||"Meting", color:"var(--health)", text:e.note }); });
+        (day.notes || []).forEach(e => { if (e.note) notes.push({ date:d, lbl, time:e.time||"", cat:"Notitie", color:"var(--note)", text:e.note }); });
       });
       if (!notes.length) return "";
       notes.sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
@@ -2149,8 +2106,8 @@ function renderReportAll(dates, agg, denom, daysData, tMin, tMax, tAvg, lastGewi
 
 // Gedetailleerd rapport voor één categorie, per dag gegroepeerd (incl. notities).
 function renderReportCategory(cat, dates, periodLabel, daysData) {
-  const titleMap = { voeding:"Voeding", luiers:"Luiers", slaap:"Slaap", gezondheid:"Gezondheid" };
-  const colorMap = { voeding:"var(--feed)", luiers:"var(--diaper)", slaap:"var(--sleep)", gezondheid:"var(--health)" };
+  const titleMap = { voeding:"Voeding", luiers:"Luiers", gezondheid:"Gezondheid", notities:"Notities" };
+  const colorMap = { voeding:"var(--feed)", luiers:"var(--diaper)", gezondheid:"var(--health)", notities:"var(--note)" };
   const title = titleMap[cat] || "Rapport";
   const color = colorMap[cat] || "var(--ink)";
 
@@ -2167,8 +2124,8 @@ function renderReportCategory(cat, dates, periodLabel, daysData) {
       }));
     } else if (cat === "luiers") {
       items = day.diapers.map(e => ({ time: e.time || "", text: DIAPER_LABEL[e.type] || "Luier", note: e.note || "" }));
-    } else if (cat === "slaap") {
-      items = day.sleeps.map(e => ({ time: e.start || "", text: `${e.start} – ${e.end} · ${fmtDuration(sleepMinutes(e))}`, note: e.note || "" }));
+    } else if (cat === "notities") {
+      items = (day.notes || []).map(e => ({ time: e.time || "", text: "Notitie", note: e.note || "" }));
     } else if (cat === "gezondheid") {
       items = day.health.map(e => ({
         time: e.time || "",
@@ -2319,8 +2276,8 @@ function lineChart(data, opts) {
 function renderModal() {
   if (state.modal === "voeding") return feedingModal();
   if (state.modal === "luier") return diaperModal();
-  if (state.modal === "slaap") return sleepModal();
   if (state.modal === "meting") return healthModal();
+  if (state.modal === "notitie") return noteModal();
   if (state.modal === "herinnering") return reminderModal();
   if (state.modal === "instellingen") return instellingenModal();
   if (state.modal === "afspraak") return afspraakModal();
@@ -2517,20 +2474,18 @@ function syncModal() {
     </div>
   </div>`;
 }
-function sleepModal() {
+function noteModal() {
   const ed = state.editEntry;
-  const startVal = ed ? ed.start : nowTimeStr();
-  const endVal = ed ? ed.end : nowTimeStr();
+  const timeVal = ed ? ed.time : nowTimeStr();
   const noteVal = ed && ed.note ? escapeHtml(ed.note) : "";
   return `
   <div class="modal-overlay" data-action="close-modal">
     <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-head"><div class="modal-title">Slaap ${ed ? "bewerken" : "toevoegen"}</div>
+      <div class="modal-head"><div class="modal-title">Notitie ${ed ? "bewerken" : "toevoegen"}</div>
         <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
-      <div class="field"><label>Van</label><input type="time" id="s-start" value="${startVal}"></div>
-      <div class="field"><label>Tot</label><input type="time" id="s-end" value="${endVal}"></div>
-      <div class="field"><label>Notitie (optioneel)</label><textarea id="s-note" placeholder="bv. onrustig, kort wakker">${noteVal}</textarea></div>
-      <button class="submit-btn" style="background:var(--sleep)" data-action="save-sleep">Slaap ${ed ? "bijwerken" : "opslaan"}</button>
+      <div class="field"><label>Tijdstip</label><input type="time" id="n-time" value="${timeVal}"></div>
+      <div class="field"><label>Notitie</label><textarea id="n-note" rows="4" placeholder="bv. veel gehuild na de voeding, bezoek vroedvrouw, eerste keer gelachen">${noteVal}</textarea></div>
+      <button class="submit-btn" style="background:var(--note)" data-action="save-note">Notitie ${ed ? "bijwerken" : "opslaan"}</button>
     </div>
   </div>`;
 }
@@ -2540,7 +2495,7 @@ function healthModal() {
   const timeVal = ed ? ed.time : nowTimeStr();
   const valueVal = ed && ed.value != null ? escapeHtml(String(ed.value)) : "";
   const noteVal = ed && ed.note ? escapeHtml(ed.note) : "";
-  const opts = [["temperatuur","Temp."],["gewicht","Gewicht"],["lengte","Lengte"],["gedrag","Gedrag"],["anders","Anders"]];
+  const opts = [["temperatuur","Temp."],["gewicht","Gewicht"],["lengte","Lengte"],["gedrag","Gedrag"]];
   const num = HEALTH_NUM[type];
   const valLabel = num ? num.label : type === "gedrag" ? "Beschrijving" : "Waarde";
   return `
@@ -2631,31 +2586,7 @@ function onAction(ev) {
   else if (action === "sync-resync") { syncCurrentView(); }
   else if (action === "open-modal") { state.editEntry = null; state.editAppt = null; state.modal = el.dataset.modal; render(); }
   else if (action === "toggle-checklist") {
-    toggleChecklistItem(todayStr(), el.dataset.id);
-    render();
-  }
-  else if (action === "sleep-start") {
-    if (!getActiveSleep()) startActiveSleep();
-    render();
-  }
-  else if (action === "sleep-stop") {
-    const active = getActiveSleep();
-    if (!active) { render(); return; }
-    const startD = new Date(active.startMs);
-    const endD = new Date();
-    const startDate = dateToStr(startD);          // sla op op de dag waarop de slaap begon
-    const entry = {
-      id: uid(),
-      start: `${pad(startD.getHours())}:${pad(startD.getMinutes())}`,
-      end: `${pad(endD.getHours())}:${pad(endD.getMinutes())}`,
-      note: "",
-    };
-    const day = getDay(startDate);
-    day.sleeps.push(entry);
-    persistDay(startDate, { kind: "sleeps", entry });
-    clearActiveSleep();
-    // spring naar de dag van de slaap zodat de gebruiker het resultaat ziet
-    state.selectedDate = startDate;
+    toggleChecklistItem(state.selectedDate, el.dataset.id);
     render();
   }
   else if (action === "close-modal") { resetBreastTimers(); state.editEntry = null; state.editAppt = null; state.modal = null; render(); }
@@ -2665,7 +2596,7 @@ function onAction(ev) {
     const entry = (day[kind] || []).find(e => e.id === id);
     if (!entry) return;
     state.editEntry = { ...entry, kind };
-    state.modal = kind === "feedings" ? "voeding" : kind === "diapers" ? "luier" : kind === "sleeps" ? "slaap" : "meting";
+    state.modal = kind === "feedings" ? "voeding" : kind === "diapers" ? "luier" : kind === "notes" ? "notitie" : "meting";
     render();
   }
   else if (action === "delete-entry") {
@@ -2854,6 +2785,25 @@ function onAction(ev) {
     resetBreastTimers();
     state.editEntry = null; state.modal = null; render();
   }
+  else if (action === "save-note") {
+    const ed = state.editEntry;
+    const entry = {
+      id: ed ? ed.id : uid(),
+      time: document.getElementById("n-time").value || nowTimeStr(),
+      note: document.getElementById("n-note").value.trim(),
+    };
+    if (!entry.note) { showModalError("Schrijf eerst iets in de notitie."); return; }
+    if (isFuture(state.selectedDate, entry.time)) { showModalError("Je kunt geen notitie in de toekomst registreren."); return; }
+    const day = getDay(state.selectedDate);
+    if (ed) {
+      const i = day.notes.findIndex(e => e.id === ed.id);
+      if (i >= 0) day.notes[i] = entry; else day.notes.push(entry);
+    } else {
+      day.notes.push(entry);
+    }
+    persistDay(state.selectedDate, { kind: "notes", entry });
+    state.editEntry = null; state.modal = null; render();
+  }
   else if (action === "save-diaper") {
     const ed = state.editEntry;
     const entry = {
@@ -2871,25 +2821,6 @@ function onAction(ev) {
       day.diapers.push(entry);
     }
     persistDay(state.selectedDate, { kind: "diapers", entry });
-    state.editEntry = null; state.modal = null; render();
-  }
-  else if (action === "save-sleep") {
-    const ed = state.editEntry;
-    const entry = {
-      id: ed ? ed.id : uid(),
-      start: document.getElementById("s-start").value || nowTimeStr(),
-      end: document.getElementById("s-end").value || nowTimeStr(),
-      note: document.getElementById("s-note").value.trim(),
-    };
-    if (isFuture(state.selectedDate, entry.start)) { showModalError("Je kunt geen slaap in de toekomst registreren."); return; }
-    const day = getDay(state.selectedDate);
-    if (ed) {
-      const i = day.sleeps.findIndex(e => e.id === ed.id);
-      if (i >= 0) day.sleeps[i] = entry; else day.sleeps.push(entry);
-    } else {
-      day.sleeps.push(entry);
-    }
-    persistDay(state.selectedDate, { kind: "sleeps", entry });
     state.editEntry = null; state.modal = null; render();
   }
   else if (action === "save-health") {
@@ -2921,13 +2852,6 @@ setInterval(() => {
   if (state.activeTab === "dag" && !state.modal) render();
 }, 60000);
 
-// Live slaapteller (elke seconde, enkel het cijfer bijwerken)
-setInterval(() => {
-  const el = document.getElementById("sleep-timer-live");
-  if (!el) return;
-  const active = getActiveSleep();
-  if (active) el.textContent = activeSleepDuration(active.startMs);
-}, 1000);
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && state.activeTab === "dag" && !state.modal) render();
@@ -2966,6 +2890,7 @@ function applyAppName() {
 applyAppName();
 state.appointments = loadAppointments();
 initSync();
+migreerAndersNaarNotitie();
 render();
 if (SYNC.enabled) {
   syncCurrentView();
