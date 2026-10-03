@@ -228,6 +228,18 @@
     border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .field { margin-bottom: 14px; }
   .timer-row { display: flex; align-items: center; gap: 10px; }
+  .scoops-hint { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--feed); }
+
+  .fw-overlay { position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(20, 24, 40, 0.55); opacity: 1; transition: opacity 0.6s ease; }
+  .fw-overlay.fading { opacity: 0; }
+  .fw-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .fw-text { position: relative; z-index: 1; text-align: center; color: #fff;
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 30px; line-height: 1.25;
+    padding: 0 28px; text-shadow: 0 2px 14px rgba(0,0,0,0.6); max-width: 90%;
+    animation: fwPop 0.5s ease-out; }
+  @keyframes fwPop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.08); } 100% { transform: scale(1); opacity: 1; } }
   .timer-btn { border: 1px solid var(--feed); background: var(--feed-soft); color: var(--feed);
     border-radius: 12px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
     font-family: 'Figtree', sans-serif; flex-shrink: 0; min-width: 64px; }
@@ -357,6 +369,96 @@ const pad = n => String(n).padStart(2, "0");
 const dateToStr = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const todayStr = () => dateToStr(new Date());
 const nowTimeStr = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+
+// ---- Feestmodus: 7 weken borstvoeding (vuurwerk bij elke voeding, 3 dagen lang) ----
+const PARTY_START_KEY = "babyritme:partyStart";
+const PARTY_DAYS = 3;
+function partyActive() {
+  let start = localStorage.getItem(PARTY_START_KEY);
+  if (!start) {
+    // eerste opening van deze versie -> start de teller vandaag
+    start = todayStr();
+    localStorage.setItem(PARTY_START_KEY, start);
+  }
+  // actief t.e.m. (start + 3 dagen - 1): dus 3 kalenderdagen
+  const endExclusive = addDays(start, PARTY_DAYS);
+  return todayStr() < endExclusive;
+}
+function showFireworks(message) {
+  if (document.getElementById("fw-overlay")) return; // niet stapelen
+  const overlay = document.createElement("div");
+  overlay.id = "fw-overlay";
+  overlay.className = "fw-overlay";
+  overlay.innerHTML = `
+    <canvas class="fw-canvas"></canvas>
+    <div class="fw-text">${message}</div>`;
+  document.body.appendChild(overlay);
+
+  const canvas = overlay.querySelector(".fw-canvas");
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  function resize() {
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width = window.innerWidth + "px";
+    canvas.style.height = window.innerHeight + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  const W = () => window.innerWidth, H = () => window.innerHeight;
+  const colors = ["#ff5252","#ffd740","#69f0ae","#40c4ff","#e040fb","#ff6e40","#fff176"];
+  let particles = [];
+  function burst(x, y) {
+    const n = 44 + Math.floor(Math.random()*26);
+    const col = colors[Math.floor(Math.random()*colors.length)];
+    for (let i=0;i<n;i++){
+      const ang = (Math.PI*2*i)/n + Math.random()*0.3;
+      const spd = 2 + Math.random()*4.5;
+      particles.push({ x, y, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd,
+        life: 1, color: Math.random()<0.25 ? colors[Math.floor(Math.random()*colors.length)] : col,
+        size: 2 + Math.random()*2 });
+    }
+  }
+  // meerdere bursts verspreid in tijd en plaats
+  let launches = 0;
+  const launchTimer = setInterval(() => {
+    burst(W()*(0.15+Math.random()*0.7), H()*(0.15+Math.random()*0.45));
+    if (++launches >= 10) clearInterval(launchTimer);
+  }, 280);
+  burst(W()*0.5, H()*0.3);
+
+  let raf;
+  function frame() {
+    ctx.clearRect(0,0,W(),H());
+    particles.forEach(p => {
+      p.vy += 0.045;          // zwaartekracht
+      p.vx *= 0.99; p.vy *= 0.99;
+      p.x += p.vx; p.y += p.vy;
+      p.life -= 0.012;
+      if (p.life > 0) {
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.fill();
+      }
+    });
+    ctx.globalAlpha = 1;
+    particles = particles.filter(p => p.life > 0);
+    raf = requestAnimationFrame(frame);
+  }
+  frame();
+
+  // automatisch opruimen na enkele seconden
+  setTimeout(() => {
+    overlay.classList.add("fading");
+    setTimeout(() => {
+      cancelAnimationFrame(raf);
+      clearInterval(launchTimer);
+      overlay.remove();
+    }, 600);
+  }, 4200);
+}
 // true als (dateStr, timeStr) in de toekomst ligt t.o.v. nu
 function isFuture(dateStr, timeStr) {
   if (dateStr > todayStr()) return true;
@@ -527,6 +629,7 @@ function exportReportCsv() {
 }
 
 const FEED_LABEL = { borst: "Borstvoeding", fles: "Flesvoeding" };
+const MILK_LABEL = { poeder: "Poedermelk", moeder: "Moedermelk" };
 const DIAPER_LABEL = { plas: "Pipi", poep: "Kaka", beide: "Pipi + kaka" };
 const HEALTH_LABEL = { temperatuur: "Temperatuur", gewicht: "Gewicht", lengte: "Lengte", gedrag: "Gedrag", anders: "Anders" };
 // numerieke meting-types met hun eenheid en decimalen
@@ -1092,7 +1195,8 @@ function labelFor(e, dateStr) {
       const kant = e.side === "links" ? "laatst links" : e.side === "rechts" ? "laatst rechts" : "";
       return `${FEED_LABEL[e.type]} · ${duur}${kant ? " · " + kant : ""}`;
     }
-    return `${FEED_LABEL[e.type]} · ${e.amount} ml`;
+    const soort = e.milk ? MILK_LABEL[e.milk] : "Flesvoeding";
+    return `${soort} · ${e.amount} ml`;
   }
   if (e.kind === "diapers") return DIAPER_LABEL[e.type];
   if (e.kind === "notes") return "Notitie";
@@ -1413,7 +1517,7 @@ function samenvattingModal() {
     body = feeds.length ? feeds.map(f => {
       const txt = f.type === "borst"
         ? `Borst · L ${fmtDuration(Number(f.left)||0)} · R ${fmtDuration(Number(f.right)||0)}${f.side ? " · laatst " + (f.side==="links"?"L":"R") : ""}`
-        : `Fles · ${f.amount} ml`;
+        : `${f.milk ? MILK_LABEL[f.milk] : "Fles"} · ${f.amount} ml`;
       return rij(f.time, txt, "var(--feed)");
     }).join("") : `<div class="sum-empty">Nog geen voedingen vandaag.</div>`;
     totalen = `
@@ -1456,7 +1560,7 @@ function afspraakModal() {
       <div class="field"><label>Titel</label>
         <input type="text" id="a-title" value="${titleVal}" placeholder="bv. Consultatie Kind & Gezin" maxlength="80"></div>
       <div class="field"><label>Datum</label><input type="date" id="a-date" value="${dateVal}"></div>
-      <div class="field"><label>Tijdstip (optioneel)</label><input type="time" id="a-time" value="${timeVal}"></div>
+      <div class="field"><label>Tijdstip (optioneel)</label><input type="time" lang="nl-BE" id="a-time" value="${timeVal}"></div>
       <div class="field"><label>Notitie (optioneel)</label><textarea id="a-note" placeholder="bv. adres, wat meebrengen">${noteVal}</textarea></div>
       <button class="submit-btn" style="background:var(--feed)" data-action="save-afspraak">Afspraak ${ed ? "bijwerken" : "opslaan"}</button>
     </div>
@@ -2310,58 +2414,66 @@ function resetBreastTimers() {
 }
 setInterval(tickBreastTimers, 1000);
 
+// Werkt de schepjes-hint bij op basis van het ml-veld (1 schepje per 30 ml water)
+function updateScoopsHint() {
+  const hint = document.getElementById("f-scoops");
+  const amtInput = document.getElementById("f-amount");
+  const milk = (document.getElementById("f-milk") || {}).value;
+  if (!hint || !amtInput || milk !== "poeder") return;
+  const ml = Number(amtInput.value) || 0;
+  if (ml <= 0) { hint.textContent = "1 schepje poeder per 30 ml water"; return; }
+  const scoops = Math.round(ml / 30);
+  const rest = ml % 30;
+  hint.textContent = `≈ ${scoops} schepje${scoops===1?"":"s"} poeder (1 per 30 ml)` + (rest ? " — gebruik een veelvoud van 30 ml" : "");
+}
+
 function feedingModal() {
   const ed = state.editEntry;
-  const type = ed ? ed.type : "borst";
-  const last = getLastBreastSide();
-  const lastHint = (!ed && last) ? `Laatste kant was <strong>${last.side === "links" ? "links" : "rechts"}</strong>${last.date ? ` (${formatDateNice(last.date)}${last.time ? ", " + last.time : ""})` : ""}.` : "";
-  const defaultSide = ed ? (ed.side || "links") : (last ? last.side : "links");
+  // Nieuwe voedingen zijn altijd fles; melksoort: "poeder" (standaard) of "moeder".
+  // Oude borstvoedingen (ed.type === "borst") worden bewerkt met de oude velden.
+  const isOldBorst = ed && ed.type === "borst";
+  const milk = ed ? (ed.milk || "poeder") : "poeder";
   const timeVal = ed ? ed.time : nowTimeStr();
-  const leftVal = ed && ed.left != null ? ed.left : "";
-  const rightVal = ed && ed.right != null ? ed.right : "";
   const amountVal = ed && ed.amount != null ? ed.amount : "";
   const noteVal = ed && ed.note ? escapeHtml(ed.note) : "";
+
+  if (isOldBorst) {
+    const leftVal = ed.left != null ? ed.left : "";
+    const rightVal = ed.right != null ? ed.right : "";
+    return `
+    <div class="modal-overlay" data-action="close-modal">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-head"><div class="modal-title">Borstvoeding bewerken</div>
+          <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
+        <div class="field"><label>Begin voeding</label><input type="time" lang="nl-BE" id="f-time" value="${timeVal}"></div>
+        <input type="hidden" id="f-type" value="borst">
+        <div class="field"><label>Links (minuten)</label><input type="number" min="0" id="f-left" placeholder="min" value="${leftVal}"></div>
+        <div class="field"><label>Rechts (minuten)</label><input type="number" min="0" id="f-right" placeholder="min" value="${rightVal}"></div>
+        <div class="field"><label>Notitie (optioneel)</label><textarea id="f-note">${noteVal}</textarea></div>
+        <button class="submit-btn" style="background:var(--feed)" data-action="save-feeding">Bijwerken</button>
+      </div>
+    </div>`;
+  }
+
+  const scoops = (milk === "poeder" && amountVal) ? Math.round(Number(amountVal) / 30) : "";
   return `
   <div class="modal-overlay" data-action="close-modal">
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-head"><div class="modal-title">Voeding ${ed ? "bewerken" : "toevoegen"}</div>
         <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
-      <div class="field"><label>Begin voeding</label><input type="time" id="f-time" value="${timeVal}"></div>
-      <div class="field"><label>Type</label>
+      <div class="field"><label>Tijdstip</label><input type="time" lang="nl-BE" id="f-time" value="${timeVal}"></div>
+      <input type="hidden" id="f-type" value="fles">
+      <div class="field"><label>Melksoort</label>
         <div class="seg">
-          <button type="button" class="${type==='borst'?'on':''}" style="${type==='borst'?'background:var(--feed)':''}" data-action="seg" data-group="f-type" data-value="borst">Borstvoeding</button>
-          <button type="button" class="${type==='fles'?'on':''}" style="${type==='fles'?'background:var(--feed)':''}" data-action="seg" data-group="f-type" data-value="fles">Flesvoeding</button>
+          <button type="button" class="${milk==='poeder'?'on':''}" style="${milk==='poeder'?'background:var(--feed)':''}" data-action="seg" data-group="f-milk" data-value="poeder">Poedermelk</button>
+          <button type="button" class="${milk==='moeder'?'on':''}" style="${milk==='moeder'?'background:var(--feed)':''}" data-action="seg" data-group="f-milk" data-value="moeder">Moedermelk</button>
         </div>
-        <input type="hidden" id="f-type" value="${type}">
+        <input type="hidden" id="f-milk" value="${milk}">
       </div>
-      <div id="f-borst-fields" style="display:${type==='borst'?'':'none'}">
-        ${lastHint ? `<div class="chart-sub" style="margin-top:-4px">${lastHint}</div>` : ""}
-        <div class="field">
-          <label>Links</label>
-          <div class="timer-row">
-            <button type="button" class="timer-btn" data-action="breast-timer" data-side="left" id="timer-btn-left">Start</button>
-            <span class="timer-display mono" id="timer-disp-left">${timerDisplay("left")}</span>
-            <input type="number" min="0" id="f-left" placeholder="min" value="${leftVal}">
-          </div>
-        </div>
-        <div class="field">
-          <label>Rechts</label>
-          <div class="timer-row">
-            <button type="button" class="timer-btn" data-action="breast-timer" data-side="right" id="timer-btn-right">Start</button>
-            <span class="timer-display mono" id="timer-disp-right">${timerDisplay("right")}</span>
-            <input type="number" min="0" id="f-right" placeholder="min" value="${rightVal}">
-          </div>
-        </div>
-        <div class="field"><label>Laatste kant</label>
-          <div class="seg">
-            <button type="button" class="${defaultSide==='links'?'on':''}" style="${defaultSide==='links'?'background:var(--feed)':''}" data-action="seg" data-group="f-side" data-value="links">Links</button>
-            <button type="button" class="${defaultSide==='rechts'?'on':''}" style="${defaultSide==='rechts'?'background:var(--feed)':''}" data-action="seg" data-group="f-side" data-value="rechts">Rechts</button>
-          </div>
-          <input type="hidden" id="f-side" value="${defaultSide}">
-        </div>
-      </div>
-      <div id="f-fles-fields" style="display:${type==='fles'?'':'none'}">
-        <div class="field"><label>Hoeveelheid (ml)</label><input type="number" min="0" id="f-amount" placeholder="bv. 120" value="${amountVal}"></div>
+      <div class="field">
+        <label id="f-amount-label">${milk==='poeder' ? "Hoeveelheid water (ml)" : "Hoeveelheid (ml)"}</label>
+        <input type="number" min="0" step="30" id="f-amount" placeholder="bv. 120" value="${amountVal}">
+        <div class="scoops-hint" id="f-scoops" style="display:${milk==='poeder'?'':'none'}">${scoops !== "" ? `≈ ${scoops} schepje${scoops===1?"":"s"} poeder (1 per 30 ml)` : "1 schepje poeder per 30 ml water"}</div>
       </div>
       <div class="field"><label>Notitie (optioneel)</label><textarea id="f-note" placeholder="bv. dronk traag">${noteVal}</textarea></div>
       <button class="submit-btn" style="background:var(--feed)" data-action="save-feeding">Voeding ${ed ? "bijwerken" : "opslaan"}</button>
@@ -2378,7 +2490,7 @@ function diaperModal() {
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-head"><div class="modal-title">Luier ${ed ? "bewerken" : "toevoegen"}</div>
         <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
-      <div class="field"><label>Tijdstip</label><input type="time" id="d-time" value="${timeVal}"></div>
+      <div class="field"><label>Tijdstip</label><input type="time" lang="nl-BE" id="d-time" value="${timeVal}"></div>
       <div class="field"><label>Type</label>
         <div class="seg">
           ${opts.map(([v,l])=>`<button type="button" class="${type===v?'on':''}" style="${type===v?'background:var(--diaper)':''}" data-action="seg" data-group="d-type" data-value="${v}">${l}</button>`).join("")}
@@ -2483,7 +2595,7 @@ function noteModal() {
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-head"><div class="modal-title">Notitie ${ed ? "bewerken" : "toevoegen"}</div>
         <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
-      <div class="field"><label>Tijdstip</label><input type="time" id="n-time" value="${timeVal}"></div>
+      <div class="field"><label>Tijdstip</label><input type="time" lang="nl-BE" id="n-time" value="${timeVal}"></div>
       <div class="field"><label>Notitie</label><textarea id="n-note" rows="4" placeholder="bv. veel gehuild na de voeding, bezoek vroedvrouw, eerste keer gelachen">${noteVal}</textarea></div>
       <button class="submit-btn" style="background:var(--note)" data-action="save-note">Notitie ${ed ? "bijwerken" : "opslaan"}</button>
     </div>
@@ -2503,7 +2615,7 @@ function healthModal() {
     <div class="modal" onclick="event.stopPropagation()">
       <div class="modal-head"><div class="modal-title">Meting ${ed ? "bewerken" : "toevoegen"}</div>
         <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
-      <div class="field"><label>Tijdstip</label><input type="time" id="h-time" value="${timeVal}"></div>
+      <div class="field"><label>Tijdstip</label><input type="time" lang="nl-BE" id="h-time" value="${timeVal}"></div>
       <div class="field"><label>Type</label>
         <div class="seg seg-wrap">
           ${opts.map(([v,l])=>`<button type="button" class="${type===v?'on':''}" style="${type===v?'background:var(--health)':''}" data-action="seg" data-group="h-type" data-value="${v}">${l}</button>`).join("")}
@@ -2523,6 +2635,8 @@ function attachHandlers() {
   root.querySelectorAll("[data-action]").forEach(el => {
     el.addEventListener(el.tagName === "INPUT" ? "change" : "click", onAction);
   });
+  const amt = document.getElementById("f-amount");
+  if (amt) amt.addEventListener("input", updateScoopsHint);
 }
 
 function onAction(ev) {
@@ -2720,13 +2834,19 @@ function onAction(ev) {
       group === "f-type" ? "--feed" : group === "d-type" ? "--diaper" : "--health"
     ) || el.style.background;
     // keep original inline color var reference instead (simpler + correct):
-    el.style.background = (group === "f-type" || group === "f-side" || group === "r-enabled") ? "var(--feed)" : group === "d-type" ? "var(--diaper)" : "var(--health)";
-    if (group === "f-type") {
-      const borstFields = document.getElementById("f-borst-fields");
-      const flesFields = document.getElementById("f-fles-fields");
-      if (borstFields && flesFields) {
-        borstFields.style.display = value === "borst" ? "" : "none";
-        flesFields.style.display = value === "fles" ? "" : "none";
+    el.style.background = (group === "f-milk" || group === "f-side" || group === "r-enabled") ? "var(--feed)" : group === "d-type" ? "var(--diaper)" : "var(--health)";
+    if (group === "f-milk") {
+      const label = document.getElementById("f-amount-label");
+      const hint = document.getElementById("f-scoops");
+      const amtInput = document.getElementById("f-amount");
+      if (value === "poeder") {
+        if (label) label.textContent = "Hoeveelheid water (ml)";
+        if (amtInput) amtInput.step = "30";
+        if (hint) { hint.style.display = ""; updateScoopsHint(); }
+      } else {
+        if (label) label.textContent = "Hoeveelheid (ml)";
+        if (amtInput) amtInput.removeAttribute("step");
+        if (hint) hint.style.display = "none";
       }
     }
     if (group === "h-type") {
@@ -2764,13 +2884,19 @@ function onAction(ev) {
       setLastBreastSide(side, time, state.selectedDate);
     } else {
       const amount = Number(document.getElementById("f-amount").value) || 0;
+      const milk = (document.getElementById("f-milk") || {}).value || "poeder";
       if (amount <= 0) {
         showModalError("Vul een hoeveelheid in (meer dan 0 ml).");
         document.getElementById("f-amount").focus();
         return;
       }
+      if (milk === "poeder" && amount % 30 !== 0) {
+        showModalError("Bij poedermelk moet de hoeveelheid water een veelvoud van 30 ml zijn.");
+        document.getElementById("f-amount").focus();
+        return;
+      }
       entry = {
-        id: ed ? ed.id : uid(), time, type, amount,
+        id: ed ? ed.id : uid(), time, type: "fles", milk, amount,
         note: document.getElementById("f-note").value.trim(),
       };
     }
@@ -2784,6 +2910,7 @@ function onAction(ev) {
     persistDay(state.selectedDate, { kind: "feedings", entry });
     resetBreastTimers();
     state.editEntry = null; state.modal = null; render();
+    if (partyActive()) showFireworks("Proficiat! 7 weken borstvoeding 🎉");
   }
   else if (action === "save-note") {
     const ed = state.editEntry;
