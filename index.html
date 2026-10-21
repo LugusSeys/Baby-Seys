@@ -142,6 +142,14 @@
   .sum-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .sum-text { font-size: 13.5px; }
   .sum-empty { font-size: 13px; color: var(--ink-soft); font-style: italic; padding: 8px 2px; }
+  .ml-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--line); }
+  .ml-row:last-child { border-bottom: none; }
+  .ml-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .ml-val { font-size: 15px; font-weight: 700; color: var(--ink); }
+  .ml-date { font-size: 12px; color: var(--ink-soft); }
+  .ml-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .chart-clickable { cursor: pointer; }
+  .chart-tap-hint { font-size: 12px; color: var(--feed); font-weight: 600; cursor: pointer; margin-top: 4px; text-align: right; }
 
   .quick-add { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 20px; }
   .quick-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 18px;
@@ -1575,6 +1583,33 @@ function afspraakModal() {
   </div>`;
 }
 
+// Modal met alle metingen van één type (gewicht/lengte), nieuwste eerst, met bewerken/verwijderen.
+function measureListModal() {
+  const type = state.measureType || "gewicht";
+  const titel = type === "gewicht" ? "Gewicht" : type === "lengte" ? "Lengte" : HEALTH_LABEL[type] || "Metingen";
+  const unit = type === "gewicht" ? " g" : type === "lengte" ? " cm" : (HEALTH_NUM[type] ? HEALTH_NUM[type].unit : "");
+  const points = allMeasurements(type).slice().reverse(); // nieuwste bovenaan
+  const body = points.length ? points.map(p => `
+    <div class="ml-row">
+      <span class="ml-info">
+        <span class="ml-val mono">${p.value}${unit}</span>
+        <span class="ml-date">${formatDateNice(p.date)}${p.time ? " · " + p.time : ""}${p.note ? " · " + escapeHtml(p.note) : ""}</span>
+      </span>
+      <span class="ml-actions">
+        <button class="entry-edit" data-action="measure-edit" data-date="${p.date}" data-id="${p.id}">${ICON.pencil}</button>
+        <button class="entry-del" data-action="measure-del" data-type="${type}" data-date="${p.date}" data-id="${p.id}">${ICON.trash}</button>
+      </span>
+    </div>`).join("") : `<div class="sum-empty">Nog geen metingen.</div>`;
+  return `
+  <div class="modal-overlay" data-action="close-modal">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-head"><div class="modal-title">${titel} — alle metingen</div>
+        <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
+      <div class="sum-list">${body}</div>
+    </div>
+  </div>`;
+}
+
 // Verzamelt alle metingen van een bepaald type over alle opgeslagen dagen, chronologisch.
 function allMeasurements(type) {
   const out = [];
@@ -1587,7 +1622,7 @@ function allMeasurements(type) {
     if (!day || !Array.isArray(day.health)) continue;
     day.health.forEach(h => {
       if (h.type === type && h.value !== "" && !isNaN(Number(h.value))) {
-        out.push({ date, time: h.time || "", value: Number(h.value) });
+        out.push({ date, time: h.time || "", value: Number(h.value), id: h.id || "", note: h.note || "" });
       }
     });
   }
@@ -1895,7 +1930,10 @@ function renderGroeiView() {
     <div class="card">
       <div class="section-title">${title}</div>
       <div class="chart-sub">Alle metingen — ${points.length} meting${points.length===1?"":"en"} · laatst ${last.value}${unit}${extra}</div>
-      ${chart}
+      <div class="chart-clickable" data-action="measure-list" data-type="${type}" title="Tik voor alle metingen">
+        ${chart}
+      </div>
+      <div class="chart-tap-hint" data-action="measure-list" data-type="${type}">Tik op de grafiek voor alle metingen →</div>
       ${hint}
     </div>`;
   }
@@ -2384,6 +2422,7 @@ function renderModal() {
   if (state.modal === "instellingen") return instellingenModal();
   if (state.modal === "afspraak") return afspraakModal();
   if (state.modal === "samenvatting") return samenvattingModal();
+  if (state.modal === "metinglijst") return measureListModal();
   if (state.modal === "sync") return syncModal();
   return "";
 }
@@ -2731,6 +2770,30 @@ function onAction(ev) {
     state.summaryCat = el.dataset.cat;
     state.modal = "samenvatting";
     render();
+  }
+  else if (action === "measure-list") {
+    state.measureType = el.dataset.type;
+    state.modal = "metinglijst";
+    render();
+  }
+  else if (action === "measure-edit") {
+    // Open de meting-modal voor de juiste dag en registratie (uit de all-time lijst).
+    const date = el.dataset.date, id = el.dataset.id;
+    const day = getDay(date);
+    const entry = (day.health || []).find(e => e.id === id);
+    if (!entry) return;
+    state.selectedDate = date;
+    state.editEntry = { ...entry, kind: "health" };
+    state.modal = "meting";
+    render();
+  }
+  else if (action === "measure-del") {
+    const date = el.dataset.date, id = el.dataset.id;
+    const day = getDay(date);
+    day.health = (day.health || []).filter(e => e.id !== id);
+    persistDay(date);
+    queueDelete(id);
+    render(); // blijft in de metinglijst-modal, nu zonder de verwijderde meting
   }
   else if (action === "edit-appt") {
     const a = state.appointments.find(x => x.id === el.dataset.id);
