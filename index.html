@@ -576,11 +576,10 @@ function exportReportCsv() {
       const day = getDay(d);
       if (cat === "voeding") {
         day.feedings.slice().sort((a,b)=>timeToMinutes(a.time||"0:0")-timeToMinutes(b.time||"0:0")).forEach(e => {
-          rows.push([d, e.time||"", e.type==="borst"?"Borstvoeding":"Flesvoeding",
-            e.type==="borst"?(Number(e.left)||0):"", e.type==="borst"?(Number(e.right)||0):"",
-            e.type==="fles"?(Number(e.amount)||0):"", e.type==="borst"?(e.side||""):"", (e.note||"")]);
+          const type = e.type==="borst" ? "Borstvoeding" : (e.milk ? MILK_LABEL[e.milk] : "Flesvoeding");
+          rows.push([d, e.time||"", type, e.type==="fles"?(Number(e.amount)||0):"", (e.note||"")]);
         });
-        head = ["Datum","Tijd","Type","Links (min)","Rechts (min)","ml (fles)","Laatste kant","Notitie"];
+        head = ["Datum","Tijd","Type","ml (fles)","Notitie"];
       } else if (cat === "luiers") {
         day.diapers.slice().sort((a,b)=>timeToMinutes(a.time||"0:0")-timeToMinutes(b.time||"0:0")).forEach(e => {
           rows.push([d, e.time||"", DIAPER_LABEL[e.type]||e.type, (e.note||"")]);
@@ -611,14 +610,14 @@ function exportReportCsv() {
   }
 
   const agg = aggregate(dates);
-  const head = ["Datum","Voedingen","ml (fles)","Borstvoedingen","Borst minuten","Borst links (min)","Borst rechts (min)","Flesvoedingen","Luiers","Pipi","Kaka","Temp gemiddeld","Temp metingen","Andere metingen"];
+  const head = ["Datum","Voedingen","ml (fles)","Borstvoedingen","Flesvoedingen","Luiers","Pipi","Kaka","Temp gemiddeld","Temp metingen","Andere metingen"];
   const rows = [head];
   agg.perDay.forEach(d => {
     const t = d.temps.length ? avg(d.temps).toFixed(1) : "";
-    rows.push([d.date, d.feedings, d.ml, d.borst, d.borstMin, d.borstL, d.borstR, d.fles, d.luiers, d.plas, d.poep, t, d.temps.length, d.otherHealth.length]);
+    rows.push([d.date, d.feedings, d.ml, d.borst, d.fles, d.luiers, d.plas, d.poep, t, d.temps.length, d.otherHealth.length]);
   });
   const tAll = agg.temps.length ? avg(agg.temps).toFixed(1) : "";
-  rows.push(["TOTAAL", agg.feedings, agg.ml, agg.borst, agg.borstMin, agg.borstL, agg.borstR, agg.fles, agg.luiers, agg.plas, agg.poep, tAll, agg.temps.length, agg.otherHealth.length]);
+  rows.push(["TOTAAL", agg.feedings, agg.ml, agg.borst, agg.fles, agg.luiers, agg.plas, agg.poep, tAll, agg.temps.length, agg.otherHealth.length]);
   const csv = "\uFEFF" + rows.map(r => r.join(";")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
@@ -699,7 +698,6 @@ function migreerAndersNaarNotitie() {
 // Uitbreidbaar: voeg hier items toe (id + label + optioneel icoon-emoji).
 const DAILY_CHECKLIST = [
   { id: "vitd", label: "Vitamine D", emoji: "💊" },
-  { id: "bactiol", label: "Bactiol", emoji: "💧" },
 ];
 function checklistKey(dateStr) { return "babyritme:checklist:" + dateStr; }
 function getChecklist(dateStr) {
@@ -903,19 +901,29 @@ function saveOutbox(o) { localStorage.setItem("babyritme:outbox", JSON.stringify
 function outboxAdd(item) { const o = loadOutbox(); o.push(item); saveOutbox(o); }
 
 let flushing = false;
+let flushPromise = null;
 async function flushOutbox() {
-  if (!SYNC.enabled || flushing) return;
+  if (!SYNC.enabled) return;
+  // Loopt er al een flush? Wacht daar dan op i.p.v. meteen terug te keren,
+  // zodat een pull nooit start terwijl er nog ongepushte wijzigingen zijn.
+  if (flushing) { try { await flushPromise; } catch (e) {} return; }
   const o = loadOutbox();
   if (!o.length) return;
   flushing = true;
-  try {
-    const upserts = o.filter(x => x.op === "upsert").map(x => x.row);
-    const deletes = o.filter(x => x.op === "delete");
-    if (upserts.length) await sbUpsert(upserts);
-    for (const d of deletes) await sbDelete(d.id);
-    saveOutbox([]);
-  } catch (e) { setStatus("offline"); }
-  finally { flushing = false; }
+  flushPromise = (async () => {
+    try {
+      const upserts = o.filter(x => x.op === "upsert").map(x => x.row);
+      const deletes = o.filter(x => x.op === "delete");
+      if (upserts.length) await sbUpsert(upserts);
+      for (const d of deletes) await sbDelete(d.id);
+      // Verwijder alleen de items die we zojuist verstuurd hebben; nieuwe items
+      // die ondertussen zijn bijgekomen, blijven in de outbox staan.
+      const sent = new Set(o.map(x => x.op === "delete" ? "d:" + x.id : "u:" + (x.row && x.row.id)));
+      const remaining = loadOutbox().filter(x => !sent.has(x.op === "delete" ? "d:" + x.id : "u:" + (x.row && x.row.id)));
+      saveOutbox(remaining);
+    } catch (e) { setStatus("offline"); }
+  })();
+  try { await flushPromise; } finally { flushing = false; flushPromise = null; }
 }
 
 function queuePush(date, kind, entry) {
@@ -1108,6 +1116,11 @@ async function syncPull(from, to) {
   SYNC.pulling = true; setStatus("syncing");
   try {
     await flushOutbox();
+    // Veiligheidsnet: zijn nog niet alle lokale wijzigingen gepusht (bv. offline of
+    // mislukte upload), pull dan niet over die dagen heen — anders zou de cloud
+    // lokale, nog niet verstuurde registraties overschrijven en lijken ze "verdwenen".
+    const pending = loadOutbox();
+    const pendingDates = new Set(pending.filter(x => x.op === "upsert" && x.row).map(x => x.row.date));
     pullAppName();
     pullBirthDate();
     pullAppointments();
@@ -1120,6 +1133,8 @@ async function syncPull(from, to) {
       if (arr) arr.push(r.data);
     });
     Object.keys(byDate).forEach(d => {
+      // Dagen met nog-niet-gepushte wijzigingen niet overschrijven met de cloud.
+      if (pendingDates.has(d)) return;
       // Een "anders"-meting die van een toestel met de oude versie komt, meteen omzetten.
       andersNaarNotitie(byDate[d], d, true);
       state.days[d] = byDate[d]; saveDay(d, byDate[d]);
@@ -1190,10 +1205,8 @@ function kindIconSmall(e) {
 function labelFor(e, dateStr) {
   if (e.kind === "feedings") {
     if (e.type === "borst") {
-      const links = Number(e.left) || 0, rechts = Number(e.right) || 0;
-      const duur = `L ${fmtDuration(links)} · R ${fmtDuration(rechts)}`;
-      const kant = e.side === "links" ? "laatst links" : e.side === "rechts" ? "laatst rechts" : "";
-      return `${FEED_LABEL[e.type]} · ${duur}${kant ? " · " + kant : ""}`;
+      // Borstminuten worden niet meer getoond; de registratie blijft zichtbaar in de geschiedenis.
+      return FEED_LABEL[e.type];
     }
     const soort = e.milk ? MILK_LABEL[e.milk] : "Flesvoeding";
     return `${soort} · ${e.amount} ml`;
@@ -1326,7 +1339,6 @@ function renderDagView() {
 
     <div class="stats-row">
       <button class="stat-chip" data-action="day-summary" data-cat="feedings"><span class="num mono">${day.feedings.length}</span><span class="lbl">voeding${day.feedings.length === 1 ? "" : "en"}</span></button>
-      <button class="stat-chip" data-action="day-summary" data-cat="feedings"><span class="num mono">${fmtDuration(totalBorstMin)}</span><span class="lbl">borst${lastSide ? " · laatst " + (lastSide.side === "links" ? "L" : "R") : ""}</span></button>
       <button class="stat-chip" data-action="day-summary" data-cat="feedings"><span class="num mono">${totalMl}</span><span class="lbl">ml fles</span></button>
       <button class="stat-chip" data-action="day-summary" data-cat="diapers"><span class="num mono">${day.diapers.length}</span><span class="lbl">luier${day.diapers.length === 1 ? "" : "s"}</span></button>
     </div>
@@ -1510,19 +1522,15 @@ function samenvattingModal() {
     const feeds = [...day.feedings].sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
     const borst = feeds.filter(f=>f.type==="borst");
     const fles = feeds.filter(f=>f.type==="fles");
-    const bMin = borst.reduce((s,f)=>s+(Number(f.left)||0)+(Number(f.right)||0),0);
-    const bL = borst.reduce((s,f)=>s+(Number(f.left)||0),0);
-    const bR = borst.reduce((s,f)=>s+(Number(f.right)||0),0);
     const ml = fles.reduce((s,f)=>s+(Number(f.amount)||0),0);
     body = feeds.length ? feeds.map(f => {
       const txt = f.type === "borst"
-        ? `Borst · L ${fmtDuration(Number(f.left)||0)} · R ${fmtDuration(Number(f.right)||0)}${f.side ? " · laatst " + (f.side==="links"?"L":"R") : ""}`
+        ? "Borstvoeding"
         : `${f.milk ? MILK_LABEL[f.milk] : "Fles"} · ${f.amount} ml`;
       return rij(f.time, txt, "var(--feed)");
     }).join("") : `<div class="sum-empty">Nog geen voedingen vandaag.</div>`;
     totalen = `
-      <div class="sum-tot"><span>${feeds.length}</span> voedingen — borst ${borst.length}× · fles ${fles.length}×</div>
-      <div class="sum-tot"><span>${fmtDuration(bMin)}</span> borst totaal (L ${fmtDuration(bL)} · R ${fmtDuration(bR)})</div>
+      <div class="sum-tot"><span>${feeds.length}</span> voeding${feeds.length===1?"":"en"}${borst.length ? ` — borst ${borst.length}× · fles ${fles.length}×` : ""}</div>
       <div class="sum-tot"><span>${ml} ml</span> fles totaal</div>`;
   } else if (cat === "diapers") {
     const dp = [...day.diapers].sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time));
@@ -1973,17 +1981,9 @@ function renderWeekView() {
 
     <div class="week-summary">
       <div class="summary-card"><div class="num mono">${totalFeedings}</div><div class="lbl">voedingen</div></div>
-      <div class="summary-card"><div class="num mono">${fmtDuration(totalBorstMinWeek)}</div><div class="lbl">borst totaal</div>${totalBorstMinWeek ? `<div class="sub">L ${fmtDuration(totalBorstLWeek)} · R ${fmtDuration(totalBorstRWeek)}</div>` : ""}</div>
       <div class="summary-card"><div class="num mono">${totalMlWeek} ml</div><div class="lbl">fles totaal</div></div>
       <div class="summary-card"><div class="num mono">${totalDiapers}</div><div class="lbl">luiers</div></div>
     </div>
-
-    ${hasBorst ? `
-    <div class="card">
-      <div class="section-title">Borstvoeding per dag (minuten)</div>
-      <div class="chart-sub">Totale tijd aan de borst per dag deze week</div>
-      ${barChart(chartData, [{key:"borstMin", color:"var(--feed)"}], v => v + " min")}
-    </div>` : ""}
 
     ${hasFles ? `
     <div class="card">
@@ -2096,8 +2096,8 @@ function renderReportAll(dates, agg, denom, daysData, tMin, tMax, tAvg, lastGewi
       <div class="report-summary">
         <div class="rep-block" style="border-left-color:var(--feed)">
           <div class="rep-lbl">Voeding</div>
-          <div class="rep-main">${agg.feedings} voedingen · ${fmtDuration(agg.borstMin)} borst · ${agg.ml} ml fles</div>
-          <div class="rep-detail">gem. ${(agg.feedings/denom).toFixed(1)}/dag · ${fmtDuration(Math.round(agg.borstMin/denom))} borst/dag · ${Math.round(agg.ml/denom)} ml fles/dag<br>borst ${agg.borst}× (L ${fmtDuration(agg.borstL)} · R ${fmtDuration(agg.borstR)}) · fles ${agg.fles}×</div>
+          <div class="rep-main">${agg.feedings} voedingen · ${agg.ml} ml fles</div>
+          <div class="rep-detail">gem. ${(agg.feedings/denom).toFixed(1)}/dag · ${Math.round(agg.ml/denom)} ml fles/dag<br>fles ${agg.fles}×${agg.borst ? ` · borst ${agg.borst}×` : ""}</div>
         </div>
         <div class="rep-block" style="border-left-color:var(--diaper)">
           <div class="rep-lbl">Luiers</div>
@@ -2138,20 +2138,18 @@ function renderReportAll(dates, agg, denom, daysData, tMin, tMax, tAvg, lastGewi
       ${dates.length > 62
         ? `<div class="empty-state">Kies een kortere periode (max. ~2 maanden) voor de dagtabel. De samenvatting en CSV-export werken wel voor langere periodes.</div>`
         : `<div class="report-table-wrap"><table class="report-table">
-        <thead><tr><th>Datum</th><th>Voed.</th><th>Borst (min)</th><th>Borst L/R</th><th>ml fles</th><th>Luiers</th><th>Pipi/kaka</th><th>Temp</th></tr></thead>
+        <thead><tr><th>Datum</th><th>Voed.</th><th>ml fles</th><th>Luiers</th><th>Pipi/kaka</th><th>Temp</th></tr></thead>
         <tbody>
           ${agg.perDay.map(d => `<tr>
             <td>${shortDate(d.date)}</td>
             <td>${d.feedings||"–"}</td>
-            <td>${d.borstMin||"–"}</td>
-            <td>${d.borstMin ? d.borstL+"/"+d.borstR : "–"}</td>
             <td>${d.ml||"–"}</td>
             <td>${d.luiers||"–"}</td>
             <td>${d.plas}/${d.poep}</td>
             <td>${d.temps.length ? avg(d.temps).toFixed(1)+"°" : "–"}</td>
           </tr>`).join("")}
           <tr class="total-row">
-            <td>Totaal</td><td>${agg.feedings}</td><td>${agg.borstMin}</td><td>${agg.borstMin ? agg.borstL+"/"+agg.borstR : "–"}</td><td>${agg.ml}</td><td>${agg.luiers}</td>
+            <td>Totaal</td><td>${agg.feedings}</td><td>${agg.ml}</td><td>${agg.luiers}</td>
             <td>${agg.plas}/${agg.poep}</td>
             <td>${agg.temps.length?avg(agg.temps).toFixed(1)+"°":"–"}</td>
           </tr>
@@ -2222,8 +2220,8 @@ function renderReportCategory(cat, dates, periodLabel, daysData) {
       items = day.feedings.map(e => ({
         time: e.time || "",
         text: (e.type === "borst"
-          ? `Borst · L ${fmtDuration(Number(e.left)||0)} · R ${fmtDuration(Number(e.right)||0)}${e.side ? " · laatst " + (e.side==="links"?"L":"R") : ""}`
-          : `Fles · ${e.amount} ml`),
+          ? "Borstvoeding"
+          : `${e.milk ? MILK_LABEL[e.milk] : "Fles"} · ${e.amount} ml`),
         note: e.note || "",
       }));
     } else if (cat === "luiers") {
