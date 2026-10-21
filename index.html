@@ -899,8 +899,19 @@ function sbDelete(id) {
     method: "DELETE", headers: { Prefer: "return=minimal" },
   });
 }
-function sbPull(from, to) {
-  return sbFetch(`entries?family_code=eq.${encodeURIComponent(SYNC.code)}&date=gte.${from}&date=lte.${to}&select=id,date,kind,data`);
+// Haalt ALLE rijen in de periode op, in blokken. Supabase/PostgREST geeft per
+// query maar een beperkt aantal rijen terug (standaard ~1000); zonder paginatie
+// werden rijen afgekapt waardoor zeldzame metingen (gewicht/lengte) ontbraken.
+async function sbPull(from, to) {
+  const base = `entries?family_code=eq.${encodeURIComponent(SYNC.code)}&date=gte.${from}&date=lte.${to}&select=id,date,kind,data&order=id`;
+  const PAGE = 1000;
+  let all = [], offset = 0, page, guard = 0;
+  do {
+    page = await sbFetch(`${base}&limit=${PAGE}&offset=${offset}`);
+    if (Array.isArray(page) && page.length) { all = all.concat(page); offset += page.length; }
+    else break;
+  } while (page.length > 0 && ++guard < 200);
+  return all;
 }
 
 // offline-wachtrij
@@ -1135,7 +1146,9 @@ async function syncPull(from, to) {
     const rows = await sbPull(from, to) || [];
     const byDate = {};
     datesBetween(from, to).forEach(d => byDate[d] = emptyDay());
+    const seen = new Set();
     rows.forEach(r => {
+      if (r && r.data && r.data.id) { if (seen.has(r.data.id)) return; seen.add(r.data.id); }
       if (!byDate[r.date]) byDate[r.date] = emptyDay();
       const arr = byDate[r.date][r.kind];
       if (arr) arr.push(r.data);
