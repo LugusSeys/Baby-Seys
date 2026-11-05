@@ -675,6 +675,80 @@ function exportReportCsv() {
   setTimeout(() => URL.revokeObjectURL(url), 200);
 }
 
+// ---------------- volledige back-up (alle data) ----------------
+function _safeParse(s) { try { return s ? JSON.parse(s) : null; } catch (e) { return s || null; } }
+function collectAllDays() {
+  const days = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf(STORAGE_PREFIX) === 0) {
+      const date = k.slice(STORAGE_PREFIX.length);
+      try { days[date] = { ...emptyDay(), ...JSON.parse(localStorage.getItem(k)) }; } catch (e) {}
+    }
+  }
+  return days;
+}
+function collectChecklists() {
+  const cl = {}; const P = "babyritme:checklist:";
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf(P) === 0) { try { cl[k.slice(P.length)] = JSON.parse(localStorage.getItem(k)); } catch (e) {} }
+  }
+  return cl;
+}
+// Elke ingave als platte rij: datum + uur + categorie + details (gesorteerd op datum, dan tijd)
+function flattenEntries(days) {
+  const out = [];
+  Object.keys(days).forEach(date => {
+    const d = days[date] || {};
+    (d.feedings || []).forEach(e => out.push({ datum: date, tijd: e.time || "", categorie: "voeding",
+      type: e.type === "borst" ? "Borstvoeding" : (e.milk ? (MILK_LABEL[e.milk] || e.milk) : "Flesvoeding"),
+      ml: e.type === "fles" ? (e.amount != null ? e.amount : "") : "", links: e.left != null ? e.left : "",
+      rechts: e.right != null ? e.right : "", kant: e.side || "", notitie: e.note || "" }));
+    (d.diapers || []).forEach(e => out.push({ datum: date, tijd: e.time || "", categorie: "luier",
+      type: DIAPER_LABEL[e.type] || e.type || "", notitie: e.note || "" }));
+    (d.health || []).forEach(e => out.push({ datum: date, tijd: e.time || "", categorie: "meting",
+      type: HEALTH_LABEL[e.type] || e.type || "", waarde: e.value != null ? e.value : "",
+      eenheid: HEALTH_NUM[e.type] ? HEALTH_NUM[e.type].unit : "", notitie: e.note || "" }));
+    (d.notes || []).forEach(e => out.push({ datum: date, tijd: e.time || "", categorie: "notitie", notitie: e.note || "" }));
+    (d.sleeps || []).forEach(e => out.push(Object.assign({ datum: date, tijd: e.time || e.start || "", categorie: "slaap" }, e)));
+  });
+  out.sort((a, b) => a.datum === b.datum
+    ? timeToMinutes(a.tijd || "0:0") - timeToMinutes(b.tijd || "0:0")
+    : (a.datum < b.datum ? -1 : 1));
+  return out;
+}
+function exportAllJson() {
+  const days = collectAllDays();
+  const backup = {
+    app: getAppName(),
+    type: "baby-dagboek-backup",
+    exportVersie: 1,
+    geexporteerdOp: new Date().toISOString(),
+    instellingen: {
+      appName: getAppName(),
+      geboortedatum: getBirthDate() || "",
+      geboortedatumTs: Number(localStorage.getItem("babyritme:birthDateTs")) || 0,
+      geslacht: getSex() || "",
+      family: localStorage.getItem("babyritme:family") || "",
+    },
+    afspraken: _safeParse(localStorage.getItem("babyritme:appointments")),
+    herinnering: _safeParse(localStorage.getItem("babyritme:reminder")),
+    checklists: collectChecklists(),
+    dagen: days,
+    ingaven: flattenEntries(days),
+  };
+  const json = JSON.stringify(backup, null, 2);
+  const slug = getAppName().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "baby-dagboek";
+  const stamp = new Date().toISOString().slice(0, 10);
+  const blob = new Blob([json], { type: "application/json;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `${slug}_backup_${stamp}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 200);
+}
+
 const FEED_LABEL = { borst: "Borstvoeding", fles: "Flesvoeding" };
 const MILK_LABEL = { poeder: "Poedermelk", moeder: "Moedermelk" };
 const DIAPER_LABEL = { plas: "Pipi", poep: "Kaka", beide: "Pipi + kaka" };
@@ -2525,7 +2599,7 @@ function updateScoopsHint() {
   if (ml <= 0) { hint.textContent = "1 schepje poeder per 30 ml water"; return; }
   const scoops = Math.round(ml / 30);
   const rest = ml % 30;
-  hint.textContent = `≈ ${scoops} schepje${scoops===1?"":"s"} poeder (1 per 30 ml)` + (rest ? " — gebruik een veelvoud van 30 ml" : "");
+  hint.textContent = `≈ ${scoops} schepje${scoops===1?"":"s"} poeder (1 per 30 ml)` + (rest ? " (afgerond)" : "");
 }
 
 function feedingModal() {
@@ -2564,13 +2638,7 @@ function feedingModal() {
         <button class="modal-close" data-action="close-modal">${ICON.x}</button></div>
       <div class="field"><label>Tijdstip</label><input type="time" lang="nl-BE" id="f-time" value="${timeVal}"></div>
       <input type="hidden" id="f-type" value="fles">
-      <div class="field"><label>Melksoort</label>
-        <div class="seg">
-          <button type="button" class="${milk==='poeder'?'on':''}" style="${milk==='poeder'?'background:var(--feed)':''}" data-action="seg" data-group="f-milk" data-value="poeder">Poedermelk</button>
-          <button type="button" class="${milk==='moeder'?'on':''}" style="${milk==='moeder'?'background:var(--feed)':''}" data-action="seg" data-group="f-milk" data-value="moeder">Moedermelk</button>
-        </div>
-        <input type="hidden" id="f-milk" value="${milk}">
-      </div>
+      <input type="hidden" id="f-milk" value="${milk}">
       <div class="field">
         <label id="f-amount-label">${milk==='poeder' ? "Hoeveelheid water (ml)" : "Hoeveelheid (ml)"}</label>
         <input type="number" min="0" step="30" id="f-amount" placeholder="bv. 120" value="${amountVal}">
@@ -2624,6 +2692,8 @@ function instellingenModal() {
         </select></div>
       ${birth ? `<div class="sync-note" style="margin-top:-4px">Leeftijd: <strong>${ageText(birth)}</strong></div>` : `<div class="sync-note" style="margin-top:-4px">Vul de geboortedatum in om de leeftijd bovenaan te tonen.</div>`}
       <button class="submit-btn" style="background:var(--feed)" data-action="save-instellingen">Opslaan</button>
+      <button class="submit-btn" style="background:var(--surface);color:var(--ink);border:1px solid var(--line);margin-top:10px" data-action="backup-json">${ICON.download} Alle data downloaden (back-up)</button>
+      <div class="sync-note" style="margin-top:8px">Bevat álle ingaven (datum + uur), metingen, instellingen en checklists in één JSON-bestand. Bewaar dit als reservekopie.</div>
     </div>
   </div>`;
 }
@@ -2777,6 +2847,7 @@ function onAction(ev) {
     setTimeout(() => { try { window.print(); } catch (e) { alert("Afdrukken lukte niet. Gebruik het menu van je browser (⋮) → Afdrukken → Opslaan als PDF."); } }, 100);
   }
   else if (action === "report-csv") { exportReportCsv(); }
+  else if (action === "backup-json") { exportAllJson(); }
   else if (action === "sync-connect") {
     const val = document.getElementById("sync-code-input").value.trim().toLowerCase().replace(/\s+/g, "-");
     if (!val) return;
@@ -3017,11 +3088,6 @@ function onAction(ev) {
       const milk = (document.getElementById("f-milk") || {}).value || "poeder";
       if (amount <= 0) {
         showModalError("Vul een hoeveelheid in (meer dan 0 ml).");
-        document.getElementById("f-amount").focus();
-        return;
-      }
-      if (milk === "poeder" && amount % 30 !== 0) {
-        showModalError("Bij poedermelk moet de hoeveelheid water een veelvoud van 30 ml zijn.");
         document.getElementById("f-amount").focus();
         return;
       }
